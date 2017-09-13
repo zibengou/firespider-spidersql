@@ -1,6 +1,11 @@
 grammar SpiderSQL;
+/** 初始任务 **/
+spidersql           :   multiple_statement      # executeMultiple
+                    |   combine_statement       # executeSimple
+                    ;
+
 /** 嵌套查询 **/
-multiple_statement  :   combine_statement (SERAIL combine_statement)+ ;
+multiple_statement  :   combine_statement (SERIAL combine_statement)+ ;
 
 combine_statement   :   simple_statement (PARALLEL simple_statement)* ;
 
@@ -11,21 +16,21 @@ simple_statement    :   assign_statement
                     ;
 
 /** 队列动作 语法**/
-push_statement      :   var '->' (var | mul_var)
-                    |   var '-[' NUMBER ']>' (var | mul_var)
-                    |   mul_var '-[' NUMBER ',' var ']>' (var | mul_var)
+push_statement      :   var '->' (var | mul_var)                            # defaultPush
+                    |   var '-[' NUMBER ']>' (var | mul_var)                # countingPush
+                    |   mul_var '-[' NUMBER ',' var ']>' (var | mul_var)    # multiplePush
                     ;
 
 /** 高级变量 语法**/
-mul_var             :   var (',' var)*;
+mul_var             :   '(' var (',' var)* ')';
 var                 :   C_VAR
                     |   assign_statement
                     ;
 
 /** 赋值动作 语法 **/
-assign_statement    :   C_VAR ASSIGN value
-                    |   C_VAR ASSIGN get
-                    |   C_VAR ASSIGN save
+assign_statement    :   C_VAR ASSIGN value          # assignValue
+                    |   C_VAR ASSIGN get            # assignGet
+                    |   C_VAR ASSIGN save           # assignSave
                     ;
 
 
@@ -71,7 +76,7 @@ SCAN_STR        :   S C A N;
 DESC_STR        :   D E S C;
 PRINT_STR       :   P R I N T;
 PARALLEL        :   ';';
-SERAIL          :   '|';
+SERIAL          :   '|';
 ASSIGN          :   ':';
 C_VAR           :   ID+ ('.' ID+)*;
 
