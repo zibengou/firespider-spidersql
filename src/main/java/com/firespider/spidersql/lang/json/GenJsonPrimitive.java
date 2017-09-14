@@ -1,4 +1,4 @@
-package com.firespider.spidersql.lang;
+package com.firespider.spidersql.lang.json;
 
 public class GenJsonPrimitive<T> extends GenJsonElement {
     private T value;

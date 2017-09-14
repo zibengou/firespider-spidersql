@@ -1,4 +1,4 @@
-package com.firespider.spidersql.lang;
+package com.firespider.spidersql.lang.json;
 
 /**
  * Created by stone on 2017/9/13.

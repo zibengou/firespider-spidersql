@@ -1,4 +1,4 @@
-package com.firespider.spidersql.lang;
+package com.firespider.spidersql.lang.json;
 
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;

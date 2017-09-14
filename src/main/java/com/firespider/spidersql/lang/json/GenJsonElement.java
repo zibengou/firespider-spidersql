@@ -1,8 +1,7 @@
-package com.firespider.spidersql.lang;
+package com.firespider.spidersql.lang.json;
 
-/**
- * Created by xiaotong.shi on 2017/9/13.
- */
+import com.firespider.spidersql.lang.Gen;
+
 public abstract class GenJsonElement extends Gen {
     abstract GenJsonElement deepCopy();
 
