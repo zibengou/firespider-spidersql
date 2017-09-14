@@ -31,7 +31,7 @@ public class GenJsonObject extends GenJsonElement {
     }
 
     public <T extends GenJsonElement> T get(String key) {
-        return (T) this.members.get(key);
+        return this.members.containsKey(key) ? (T) this.members.get(key) : (T) GenJsonNull.INSTANCE;
     }
 
     public Set<Entry<String, GenJsonElement>> entrySet() {

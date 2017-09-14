@@ -48,7 +48,7 @@ obj
    ;
 
 map
-   : STRING ':' value
+   : (C_VAR | STRING) ':' value
    ;
 
 array
@@ -84,7 +84,7 @@ C_VAR           :   ID+ ('.' ID+)*;
 STRING          :   '"' (ESC | ~ ["\\])* '"';
 DOUBLE          :   '-'? DIGIT+ ( '.' DIGIT+ )+;
 INT             :   '-'? DIGIT+;
-fragment ID     :   [a-zA-Z]+ [a-zA-Z0-9]*;
+fragment ID              :   [a-zA-Z]+ [a-zA-Z0-9]*;
 fragment ESC    :   '\\' (["\\/bfnrt] | UNICODE);
 fragment UNICODE:   'u' HEX HEX HEX HEX;
 fragment HEX    :   [0-9a-fA-F];

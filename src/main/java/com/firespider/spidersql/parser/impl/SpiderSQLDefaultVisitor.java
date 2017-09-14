@@ -4,15 +4,10 @@ import com.firespider.spidersql.lang.*;
 import com.firespider.spidersql.lang.json.*;
 import com.firespider.spidersql.parser.SpiderSQLBaseVisitor;
 import com.firespider.spidersql.parser.SpiderSQLParser;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by xiaotong.shi on 2017/9/13.
- */
 public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
 
     private final Map<String, Gen> params;
@@ -24,19 +19,8 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     @Override
     public Gen visitGet(SpiderSQLParser.GetContext ctx) {
         System.out.println(System.currentTimeMillis());
-        for(int i=0;i<10;i++) {
-            GenJsonObject element = (GenJsonObject) visitObj(ctx.obj());
-        }
+        GenJsonObject element = (GenJsonObject) visitObj(ctx.obj());
         System.out.println(System.currentTimeMillis());
-        System.out.println("in get info");
-        String json = ctx.obj().getText();
-        System.out.println(System.currentTimeMillis());
-        Gson gson = new Gson();
-        for(int i=0;i<10;i++){
-            gson.fromJson(json, JsonElement.class);
-        }
-        System.out.println(System.currentTimeMillis());
-//        return super.visitGet(ctx);
         return null;
     }
 
@@ -50,7 +34,14 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
         } else if (ctx.DOUBLE() != null) {
             element = new GenJsonPrimitive<>(Double.parseDouble(ctx.DOUBLE().getText()));
         } else if (ctx.C_VAR() != null) {
-            element = (GenJsonElement) params.get(ctx.C_VAR().getText());
+            // 针对属性值，遍历获取
+            String[] props = ctx.C_VAR().getText().split("\\.");
+            if (!params.containsKey(props[0]))
+                return GenJsonNull.INSTANCE;
+            element = (GenJsonElement) params.get(props[0]);
+            for (int i = 1; i < props.length; i++) {
+                element = ((GenJsonObject) element).get(props[i]);
+            }
         } else if (ctx.obj() != null) {
             element = (GenJsonElement) visitObj(ctx.obj());
         } else if (ctx.array() != null) {
@@ -69,7 +60,12 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     public Gen visitObj(SpiderSQLParser.ObjContext ctx) {
         GenJsonObject element = new GenJsonObject();
         for (SpiderSQLParser.MapContext mapContext : ctx.map()) {
-            String name = mapContext.STRING().getText().replace("\"", "");
+            String name;
+            if (mapContext.C_VAR() != null) {
+                name = mapContext.C_VAR().getText();
+            } else {
+                name = mapContext.STRING().getText().replace("\"", "");
+            }
             GenJsonElement value = (GenJsonElement) visitValue(mapContext.value());
             element.add(name, value);
         }
@@ -79,9 +75,7 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     @Override
     public Gen visitArray(SpiderSQLParser.ArrayContext ctx) {
         GenJsonArray array = new GenJsonArray();
-        for (SpiderSQLParser.ValueContext valueContext : ctx.value()) {
-            array.add(visitValue(valueContext));
-        }
+        ctx.value().forEach(value -> array.add(visitValue(value)));
         return array;
     }
 }

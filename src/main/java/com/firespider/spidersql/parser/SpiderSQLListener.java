@@ -1,4 +1,4 @@
-// Generated from /Users/stone/IdeaProjects/firespider-spidersql/SpiderSQL.g4 by ANTLR 4.7
+// Generated from D:/firespider-spidersql\SpiderSQL.g4 by ANTLR 4.7
 package com.firespider.spidersql.parser;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
