@@ -1,5 +1,11 @@
 package com.firespider.spidersql.aio.net;
 
+import com.sun.corba.se.pept.protocol.ProtocolHandler;
+import com.sun.deploy.net.protocol.ProtocolType;
+import org.apache.logging.log4j.core.net.Protocol;
+
+import java.net.ProtocolFamily;
+
 /**
  * 统一资源定位符
  * [protocol:][//host:port][/path][?query][#fragment]
@@ -33,47 +39,23 @@ public class URL {
         return protocol;
     }
 
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
-    }
-
     public String getHost() {
         return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
     }
 
     public String getPort() {
         return port;
     }
 
-    public void setPort(String port) {
-        this.port = port;
-    }
-
     public String getPath() {
         return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
     }
 
     public String getQuery() {
         return query;
     }
 
-    public void setQuery(String query) {
-        this.query = query;
-    }
-
     public String getFragment() {
         return fragment;
-    }
-
-    public void setFragment(String fragment) {
-        this.fragment = fragment;
     }
 }
