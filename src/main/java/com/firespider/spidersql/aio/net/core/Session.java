@@ -10,7 +10,7 @@ import java.util.List;
  * Created by stone on 2017/9/17.
  */
 public class Session {
-    private static final int READ_BUF_SIZE = 1024;
+    private static final int READ_BUF_SIZE = 4;
 
     private AsynchronousSocketChannel socketChannel;
 
@@ -28,7 +28,7 @@ public class Session {
 
     private ByteBuffer readBuffer;
 
-    private CompletionHandler<Integer, Message> customHandler;
+    private CompletionHandler<Message, Session> customHandler;
 
     public Session(String host, int port) {
         this.address = new InetSocketAddress(host, port);
@@ -37,27 +37,28 @@ public class Session {
         this.writeHandler = new WriteToChannelHandler();
         this.connectionHandler = new ConnectionHandler();
         this.readBuffer = ByteBuffer.allocate(READ_BUF_SIZE);
-        this.writeToChannelMessage = new Message(ByteBuffer.wrap("aaa".getBytes()),protocol);
+        this.writeToChannelMessage = new Message("aaa".getBytes());
+        this.readFromChannelMessage = new Message("UTF-8");
     }
 
-    public void readFromChannel(Integer writeResult) {
-        this.socketChannel.read(readBuffer, this, this.readHandler);
+    public void readFromChannel(Integer length, boolean fromWrite) {
+        if (fromWrite) {
+            this.socketChannel.read(readBuffer, this, this.readHandler);
+        } else {
+            readFromChannelMessage.put(readBuffer.array());
+            readBuffer.compact();
+            if (length < READ_BUF_SIZE) {
+                this.customHandler.completed(readFromChannelMessage, this);
+            } else {
+                this.socketChannel.read(readBuffer, this, this.readHandler);
+            }
+        }
     }
 
     public void writeToChannel() {
         this.socketChannel.write(this.writeToChannelMessage.getBuffer(), this, this.writeHandler);
     }
 
-    public void handleCustomHandler(Integer readResult) {
-        if(readResult > 0) {
-            readBuffer.flip();
-            System.out.println("read in");
-            System.out.println(new Message(readBuffer, protocol).toString());
-            readBuffer.compact();
-        }
-//        readFromChannelMessage = new Message(readBuffer, protocol);
-        this.customHandler.completed(readResult, readFromChannelMessage);
-    }
 
     public AsynchronousSocketChannel getSocketChannel() {
         return socketChannel;

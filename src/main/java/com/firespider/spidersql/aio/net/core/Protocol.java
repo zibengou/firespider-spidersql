@@ -10,9 +10,18 @@ import java.nio.charset.CharsetDecoder;
  */
 public class Protocol {
 
-    private CharsetDecoder decoder = Charset.forName("GBK").newDecoder();
+    private final CharsetDecoder decoder;
+
+    public Protocol() {
+        this("UTF-8");
+    }
+
+    public Protocol(String charset) {
+        decoder = Charset.forName(charset).newDecoder();
+    }
 
     public String decode(ByteBuffer bf) throws CharacterCodingException {
+
         return String.valueOf(decoder.decode(bf));
     }
 }

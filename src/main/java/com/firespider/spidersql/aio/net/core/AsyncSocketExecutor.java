@@ -24,7 +24,7 @@ public class AsyncSocketExecutor {
         this.channelGroup = AsynchronousChannelGroup.withThreadPool(Executors.newFixedThreadPool(threadNum));
     }
 
-    public void execute(List<Session> sessionList, CompletionHandler<Integer, Message> handler) throws IOException, ExecutionException, InterruptedException {
+    public void execute(List<Session> sessionList, CompletionHandler<Message, Session> handler) throws IOException, ExecutionException, InterruptedException {
         for (Session session : sessionList) {
             AsynchronousSocketChannel sc = AsynchronousSocketChannel.open(this.channelGroup);
             sc.setOption(StandardSocketOptions.TCP_NODELAY,
@@ -42,15 +42,15 @@ public class AsyncSocketExecutor {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         AsyncSocketExecutor executor = new AsyncSocketExecutor();
-        Session session = new Session("localhost", 80);
-        executor.execute(Arrays.asList(session), new CompletionHandler<Integer, Message>() {
+        Session session = new Session("localhost", 8070);
+        executor.execute(Arrays.asList(session), new CompletionHandler<Message, Session>() {
             @Override
-            public void completed(Integer result, Message attachment) {
-                System.out.println("customer finished");
+            public void completed(Message result, Session session1) {
+                System.out.println(session1.getReadFromChannelMessage().toString());
             }
 
             @Override
-            public void failed(Throwable exc, Message attachment) {
+            public void failed(Throwable exc, Session attachment) {
 
             }
         });
