@@ -1,9 +1,10 @@
-package com.firespider.spidersql.aio.net;
+package com.firespider.spidersql.aio.net.http;
 
 import com.sun.corba.se.pept.protocol.ProtocolHandler;
 import com.sun.deploy.net.protocol.ProtocolType;
 import org.apache.logging.log4j.core.net.Protocol;
 
+import java.net.MalformedURLException;
 import java.net.ProtocolFamily;
 
 /**
@@ -13,7 +14,7 @@ import java.net.ProtocolFamily;
 public class URL {
     private String protocol;
     private String host;
-    private String port;
+    private int port;
     private String path;
     private String query;
     private String fragment;
@@ -22,11 +23,23 @@ public class URL {
         this.parse(uri);
     }
 
-    public void parse(String uri) {
-        // TODO: 2017/9/15 parse uri
+    public boolean parse(String uri) {
+        String[] c1 = uri.trim().split("://");
+        if (c1.length == 2) {
+            this.protocol = c1[0];
+            String[] c2 = c1[1].split("/");
+            String hostPort = c2[0];
+            String[] c3 = hostPort.split(":");
+            this.host = c3[0];
+            this.port = Integer.parseInt(c3[1]);
+            this.path = c2.length > 1 ? c2[2] : "/";
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    public URL(String protocol, String host, String port, String path, String query, String fragment) {
+    public URL(String protocol, String host, int port, String path, String query, String fragment) {
         this.protocol = protocol;
         this.host = host;
         this.port = port;
@@ -43,7 +56,7 @@ public class URL {
         return host;
     }
 
-    public String getPort() {
+    public int getPort() {
         return port;
     }
 

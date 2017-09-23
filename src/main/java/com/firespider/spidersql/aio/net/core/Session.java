@@ -10,7 +10,9 @@ import java.util.List;
  * Created by stone on 2017/9/17.
  */
 public class Session {
-    private static final int READ_BUF_SIZE = 4;
+    private static final int READ_BUF_SIZE = 1024;
+
+    private String key;
 
     private AsynchronousSocketChannel socketChannel;
 
@@ -30,32 +32,48 @@ public class Session {
 
     private CompletionHandler<Message, Session> customHandler;
 
-    public Session(String host, int port) {
+    public Session(String host, int port, Message read, Message write, String key) {
         this.address = new InetSocketAddress(host, port);
-        this.protocol = new Protocol();
         this.readHandler = new ReadFromChannelHandler();
         this.writeHandler = new WriteToChannelHandler();
         this.connectionHandler = new ConnectionHandler();
         this.readBuffer = ByteBuffer.allocate(READ_BUF_SIZE);
-        this.writeToChannelMessage = new Message("aaa".getBytes());
-        this.readFromChannelMessage = new Message("UTF-8");
+        this.writeToChannelMessage = write;
+        this.readFromChannelMessage = read;
+        this.key = key;
     }
 
-    public void readFromChannel(Integer length, boolean fromWrite) {
+    public Session(String host, int port, String key) {
+        this(host, port, new Message(), new Message("NULL"), key);
+    }
+
+    public Session(String host, int port, Message write, String key) {
+        this(host, port, new Message(), write, key);
+    }
+
+    void readFromChannel(Integer length, boolean fromWrite) {
         if (fromWrite) {
             this.socketChannel.read(readBuffer, this, this.readHandler);
         } else {
-            readFromChannelMessage.put(readBuffer.array());
-            readBuffer.compact();
             if (length < READ_BUF_SIZE) {
+                byte[] lastBytes = new byte[length];
+                System.arraycopy(this.readBuffer.array(), 0, lastBytes, 0, length);
+                readFromChannelMessage.put(lastBytes);
+                readBuffer.compact();
                 this.customHandler.completed(readFromChannelMessage, this);
             } else {
+                readFromChannelMessage.put(readBuffer.array());
+                readBuffer.compact();
                 this.socketChannel.read(readBuffer, this, this.readHandler);
             }
         }
     }
 
-    public void writeToChannel() {
+    void handleFail() {
+        this.customHandler.failed(new Throwable("fail"), this);
+    }
+
+    void writeToChannel() {
         this.socketChannel.write(this.writeToChannelMessage.getBuffer(), this, this.writeHandler);
     }
 
@@ -106,5 +124,9 @@ public class Session {
 
     public void setReadFromChannelMessage(Message readFromChannelMessage) {
         this.readFromChannelMessage = readFromChannelMessage;
+    }
+
+    public String getKey() {
+        return key;
     }
 }

@@ -12,12 +12,11 @@ public class ConnectionHandler implements CompletionHandler<Void, Session> {
 
     @Override
     public void completed(Void result, Session session) {
-        System.out.println("connect success");
         session.writeToChannel();
     }
 
     @Override
     public void failed(Throwable exc, Session session) {
-        System.out.println("connect failure");
+        session.handleFail();
     }
 }

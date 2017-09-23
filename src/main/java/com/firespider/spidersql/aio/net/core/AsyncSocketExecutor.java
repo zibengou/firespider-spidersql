@@ -1,7 +1,9 @@
 package com.firespider.spidersql.aio.net.core;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.StandardSocketOptions;
+import java.net.URL;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
@@ -37,23 +39,10 @@ public class AsyncSocketExecutor {
             session.setSocketChannel(sc);
             sc.connect(session.getAddress(), session, session.getConnectionHandler());
         }
-        Thread.sleep(5000);
     }
 
-    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
-        AsyncSocketExecutor executor = new AsyncSocketExecutor();
-        Session session = new Session("localhost", 8070);
-        executor.execute(Arrays.asList(session), new CompletionHandler<Message, Session>() {
-            @Override
-            public void completed(Message result, Session session1) {
-                System.out.println(session1.getReadFromChannelMessage().toString());
-            }
-
-            @Override
-            public void failed(Throwable exc, Session attachment) {
-
-            }
-        });
+    public void close() throws IOException {
+        this.channelGroup.shutdownNow();
     }
 
 }

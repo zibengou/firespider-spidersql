@@ -10,12 +10,11 @@ public class WriteToChannelHandler implements CompletionHandler<Integer, Session
 
     @Override
     public void completed(Integer result, Session session) {
-        System.out.println("write success");
         session.readFromChannel(result, true);
     }
 
     @Override
     public void failed(Throwable exc, Session session) {
-        System.out.println("write failure");
+        session.handleFail();
     }
 }

@@ -9,13 +9,12 @@ public class ReadFromChannelHandler implements CompletionHandler<Integer, Sessio
 
     @Override
     public void completed(Integer result, Session session) {
-        System.out.println("read success");
         session.readFromChannel(result, false);
 
     }
 
     @Override
     public void failed(Throwable exc, Session session) {
-        System.out.println("read failure");
+        session.handleFail();
     }
 }
