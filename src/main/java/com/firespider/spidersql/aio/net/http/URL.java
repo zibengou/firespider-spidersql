@@ -1,12 +1,5 @@
 package com.firespider.spidersql.aio.net.http;
 
-import com.sun.corba.se.pept.protocol.ProtocolHandler;
-import com.sun.deploy.net.protocol.ProtocolType;
-import org.apache.logging.log4j.core.net.Protocol;
-
-import java.net.MalformedURLException;
-import java.net.ProtocolFamily;
-
 /**
  * 统一资源定位符
  * [protocol:][//host:port][/path][?query][#fragment]
@@ -26,23 +19,7 @@ public class URL {
     }
 
     public boolean parse(String uri) {
-//        String[] c1 = uri.trim().split("://");
-//        if (c1.length == 2) {
-//            this.protocol = c1[0];
-//            String[] c2 = c1[1].split("/");
-//            String hostPort = c2[0];
-//            String[] c3 = hostPort.split(":");
-//            this.host = c3[0];
-//            if (c3.length > 1) {
-//                this.port = Integer.parseInt(c3[1]);
-//            } else {
-//                this.port = 80;
-//            }
-//            this.path = c2.length > 1 ? c2[2] : "/";
-//            return true;
-//        } else {
-//            return false;
-//        }
+        // TODO: 2017/9/24 避免使用StringBuilder，使用多个标志位与POSITION进行处理
         int pos = 0;
         boolean hasProtocol = false;
         boolean hasHost = false;
@@ -85,17 +62,13 @@ public class URL {
                         break;
                 }
                 sb.delete(0, sb.length());
-//                pos++;
                 hasHost = true;
                 hasPort = true;
-//                continue;
             }
             if (c == '/' && hasHost && !hasPort) {
                 this.port = Integer.parseInt(sb.toString());
                 sb.delete(0, sb.length());
-//                pos++;
                 hasPort = true;
-//                continue;
             }
             sb.append(c);
         }

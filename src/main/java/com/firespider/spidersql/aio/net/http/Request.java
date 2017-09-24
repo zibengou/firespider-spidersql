@@ -1,7 +1,6 @@
 package com.firespider.spidersql.aio.net.http;
 
 
-import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.TreeMap;
 

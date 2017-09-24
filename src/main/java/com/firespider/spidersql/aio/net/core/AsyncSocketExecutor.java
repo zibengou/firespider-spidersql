@@ -1,15 +1,10 @@
 package com.firespider.spidersql.aio.net.core;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.SocketOption;
 import java.net.StandardSocketOptions;
-import java.net.URL;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 

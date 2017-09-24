@@ -1,19 +1,13 @@
 package com.firespider.spidersql.aio.net.core;
 
 
-import org.voovan.tools.ByteBufferChannel;
-import org.voovan.tools.TEnv;
 
 import javax.net.ssl.*;
-import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousSocketChannel;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -32,7 +26,7 @@ public class SSLManager {
     private SSLEngine engine;
     private boolean needClientAuth;
 
-    boolean handShakeDone = false;
+    private boolean handShakeDone = false;
 
     private ByteBuffer appBuffer, netBuffer,readBuffer;
 
@@ -58,15 +52,6 @@ public class SSLManager {
         this.needClientAuth = useClientAuth;
         createSSLEngine(protocol, host, port);
         initBuf();
-    }
-
-    /**
-     * 获取 SSLEngine
-     *
-     * @return SSLEngine 对象
-     */
-    public SSLEngine getSSLEngine() {
-        return engine;
     }
 
     /**
@@ -117,7 +102,6 @@ public class SSLManager {
             } else {
                 context.init(null, null, null);
             }
-            //NoSuchAlgorithmException | KeyManagementException |
         } catch (Exception e) {
 
             throw new SSLException("Init SSLContext Error: " + e.getMessage(), e);
@@ -164,6 +148,7 @@ public class SSLManager {
      */
     public void unwrap(ByteBuffer in, ByteBuffer out) throws SSLException, ExecutionException, InterruptedException {
         out.clear();
+        // TODO: 2017/9/24 SSLENGINE UNWRAP jdk异常。需要寻找解决方案。
         while(in.hasRemaining()) {
             in.flip();
             engine.unwrap(in, out);
@@ -196,7 +181,6 @@ public class SSLManager {
                 default:
                     break;
             }
-//			TEnv.sleep(1);
         }
         return handShakeDone;
     }
@@ -247,26 +231,6 @@ public class SSLManager {
             }
         }
         return engine.getHandshakeStatus();
-    }
-
-
-    private static class DefaultTrustManager implements X509TrustManager {
-
-        @Override
-        public void checkClientTrusted(X509Certificate[] paramArrayOfX509Certificate, String paramString) throws CertificateException {
-
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] paramArrayOfX509Certificate, String paramString) throws CertificateException {
-
-        }
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return new X509Certificate[0];
-        }
-
     }
 }
 

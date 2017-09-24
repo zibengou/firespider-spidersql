@@ -1,10 +1,7 @@
 package com.firespider.spidersql.aio.net.core;
 
-import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.util.Map;
 
 /**
  * Created by stone on 2017/9/17.

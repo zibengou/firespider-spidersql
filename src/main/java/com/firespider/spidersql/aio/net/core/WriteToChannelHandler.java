@@ -1,6 +1,5 @@
 package com.firespider.spidersql.aio.net.core;
 
-import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 
 /**

@@ -3,12 +3,10 @@ package com.firespider.spidersql.aio.net.core;
 import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.InterfaceAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.Charset;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -18,7 +16,9 @@ import java.util.concurrent.TimeUnit;
 public class Session {
     private static final int READ_BUF_SIZE = 4096;
 
-    private long timeout = 5;
+    private static final int TIMEOUT = 5;
+
+    private int timeout;
 
     private int bufSize;
 
@@ -43,14 +43,19 @@ public class Session {
     private Charset charset;
 
     public Session(String host, int port, Message read, Message write, boolean useSSL) {
+        this(host, port, read, write, TIMEOUT, READ_BUF_SIZE, useSSL);
+    }
+
+    public Session(String host, int port, Message read, Message write, int timeout, int bufSize, boolean useSSL) {
         this.address = new InetSocketAddress(host, port);
         this.readHandler = new ReadFromChannelHandler();
         this.writeHandler = new WriteToChannelHandler();
         this.connectionHandler = new ConnectionHandler();
-        this.bufSize = READ_BUF_SIZE;
+        this.bufSize = bufSize;
         this.readBuffer = ByteBuffer.allocate(bufSize);
         this.writeToChannelMessage = write;
         this.readFromChannelMessage = read;
+        this.timeout = timeout;
         if (useSSL) {
             try {
                 this.sslManager = new SSLManager("TLSv1.2", host, port);
@@ -82,12 +87,12 @@ public class Session {
 
     void readFromChannel(Integer length, boolean fromWrite) {
         if (fromWrite) {
-            this.socketChannel.read(readBuffer, this, this.readHandler);
+            this.socketChannel.read(readBuffer, timeout, TimeUnit.SECONDS, this, this.readHandler);
         } else {
             if (length > 0) {
                 readFromChannelMessage.put(readBuffer.array(), 0, readBuffer.position());
                 readBuffer.clear();
-                this.socketChannel.read(readBuffer, this, this.readHandler);
+                this.socketChannel.read(readBuffer, timeout, TimeUnit.SECONDS, this, this.readHandler);
             } else {
                 this.customHandler.completed(readFromChannelMessage, this);
             }
