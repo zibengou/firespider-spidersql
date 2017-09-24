@@ -1,6 +1,7 @@
 package com.firespider.spidersql.aio.net.http;
 
 
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -63,7 +64,7 @@ public class Request extends HttpMessage {
         Map<String, String> resMap = new TreeMap<>();
         resMap.put("Host", this.url.getHost());
         resMap.put("Connection", "Keep-Alive");
-        resMap.put("User-Agent", userAgents[(int) (System.currentTimeMillis() & (userAgents.length-1))]);
+        resMap.put("User-Agent", userAgents[(int) (System.currentTimeMillis() & (userAgents.length - 1))]);
         resMap.put("Accept-Language", "en-us");
         if (header != null)
             resMap.putAll(header);
@@ -83,5 +84,11 @@ public class Request extends HttpMessage {
         return this.url.getPort();
     }
 
+    public String getProtocol() {
+        return this.url.getProtocol();
+    }
 
+    public String getUrl() {
+        return url.getUrl();
+    }
 }

@@ -1,24 +1,30 @@
 package com.firespider.spidersql.aio.net.core;
 
+import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.nio.charset.Charset;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by stone on 2017/9/17.
  */
 public class Session {
-    private static final int READ_BUF_SIZE = 1024;
+    private static final int READ_BUF_SIZE = 4096;
 
-    private String key;
+    private long timeout = 5;
+
+    private int bufSize;
 
     private AsynchronousSocketChannel socketChannel;
 
     private InetSocketAddress address;
-
-    private Protocol protocol;
 
     private ConnectionHandler connectionHandler;
 
@@ -28,44 +34,71 @@ public class Session {
 
     private Message writeToChannelMessage, readFromChannelMessage;
 
+    private SSLManager sslManager;
+
     private ByteBuffer readBuffer;
 
     private CompletionHandler<Message, Session> customHandler;
 
-    public Session(String host, int port, Message read, Message write, String key) {
+    private Charset charset;
+
+    public Session(String host, int port, Message read, Message write, boolean useSSL) {
         this.address = new InetSocketAddress(host, port);
         this.readHandler = new ReadFromChannelHandler();
         this.writeHandler = new WriteToChannelHandler();
         this.connectionHandler = new ConnectionHandler();
-        this.readBuffer = ByteBuffer.allocate(READ_BUF_SIZE);
+        this.bufSize = READ_BUF_SIZE;
+        this.readBuffer = ByteBuffer.allocate(bufSize);
         this.writeToChannelMessage = write;
         this.readFromChannelMessage = read;
-        this.key = key;
+        if (useSSL) {
+            try {
+                this.sslManager = new SSLManager("TLSv1.2", host, port);
+            } catch (SSLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            this.sslManager = null;
+        }
     }
 
-    public Session(String host, int port, String key) {
-        this(host, port, new Message(), new Message("NULL"), key);
+    public Session(String host, int port) {
+        this(host, port, new Message(), new Message(), false);
     }
 
-    public Session(String host, int port, Message write, String key) {
-        this(host, port, new Message(), write, key);
+    public Session(String host, int port, Message write, boolean useSSL, Charset charset) {
+        this(host, port, new Message(charset), write, useSSL);
+        this.charset = charset;
+    }
+
+    public Session(String host, int port, Message write, Charset charset) {
+        this(host, port, new Message(charset), write, false);
+        this.charset = charset;
+    }
+
+    public void setReadFromChannelHandler(ReadFromChannelHandler handler) {
+        this.readHandler = handler;
     }
 
     void readFromChannel(Integer length, boolean fromWrite) {
         if (fromWrite) {
             this.socketChannel.read(readBuffer, this, this.readHandler);
         } else {
-            if (length < READ_BUF_SIZE) {
-                byte[] lastBytes = new byte[length];
-                System.arraycopy(this.readBuffer.array(), 0, lastBytes, 0, length);
-                readFromChannelMessage.put(lastBytes);
-                readBuffer.compact();
-                this.customHandler.completed(readFromChannelMessage, this);
-            } else {
-                readFromChannelMessage.put(readBuffer.array());
-                readBuffer.compact();
+            if (length > 0) {
+                readFromChannelMessage.put(readBuffer.array(), 0, readBuffer.position());
+                readBuffer.clear();
                 this.socketChannel.read(readBuffer, this, this.readHandler);
+            } else {
+                this.customHandler.completed(readFromChannelMessage, this);
             }
+        }
+    }
+
+    void doSSLHandShake() {
+        try {
+            sslManager.doHandShake(this);
+        } catch (IOException | ExecutionException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -92,10 +125,6 @@ public class Session {
 
     public ConnectionHandler getConnectionHandler() {
         return connectionHandler;
-    }
-
-    public Protocol getProtocol() {
-        return protocol;
     }
 
     public ReadFromChannelHandler getReadHandler() {
@@ -126,7 +155,15 @@ public class Session {
         this.readFromChannelMessage = readFromChannelMessage;
     }
 
-    public String getKey() {
-        return key;
+    public CompletionHandler<Message, Session> getCustomHandler() {
+        return customHandler;
+    }
+
+    public ByteBuffer getReadBuffer() {
+        return readBuffer;
+    }
+
+    public boolean isSSL() {
+        return sslManager != null;
     }
 }

@@ -10,7 +10,7 @@ import java.util.Map;
  * Created by stone on 2017/9/17.
  */
 public class Message {
-    private byte[] buffer;
+    protected byte[] buffer;
 
     private int capacity;
 
@@ -18,8 +18,7 @@ public class Message {
 
     private final static int DEFAULT_CAPACITY = 8192;
 
-
-    private Charset charset;
+    protected Charset charset;
 
     protected Message(byte[] buffer, Charset charset) {
         this.buffer = buffer;
@@ -59,21 +58,27 @@ public class Message {
         setBuffer(str.getBytes(charset));
     }
 
-    void setBuffer(byte[] buffer) {
+    protected void setBuffer(byte[] buffer) {
         this.buffer = buffer;
         this.capacity = buffer.length;
         this.position = this.capacity;
     }
 
-    ByteBuffer getBuffer() {
+    public ByteBuffer getBuffer() {
         return ByteBuffer.wrap(buffer, 0, this.position);
     }
 
-    public byte[] getBytes() {
+    public byte[] getEffectBytes() {
         byte[] res = new byte[this.position];
         for (int i = 0; i < this.position; i++) {
             res[i] = this.buffer[i];
         }
+        return res;
+    }
+
+    public byte[] getBytes() {
+        byte[] res = new byte[capacity];
+        System.arraycopy(buffer, 0, res, 0, capacity);
         return res;
     }
 
@@ -83,11 +88,18 @@ public class Message {
      * 3. 重置有效长度
      * @param newBytes
      */
-    void put(final byte[] newBytes) {
+    protected void put(final byte[] newBytes) {
+        if (newBytes != null && newBytes.length > 0) {
+            put(newBytes, 0, newBytes.length);
+        }
+
+    }
+
+    protected void put(final byte[] newBytes, int start, int length) {
         if (newBytes != null && newBytes.length > 0) {
             checkCapacity(newBytes.length);
-            System.arraycopy(newBytes, 0, this.buffer, this.position, newBytes.length);
-            this.position += newBytes.length;
+            System.arraycopy(newBytes, start, this.buffer, this.position, length);
+            this.position += length;
         }
     }
 
@@ -113,8 +125,16 @@ public class Message {
         }
     }
 
+    public void setCharset(Charset charset) {
+        this.charset = charset;
+    }
+
+    public Charset getCharset() {
+        return charset;
+    }
+
     public String toString() {
-        return new String(this.buffer, 0, this.position);
+        return new String(this.buffer, 0, this.position, charset);
     }
 
 }

@@ -12,7 +12,11 @@ public class ConnectionHandler implements CompletionHandler<Void, Session> {
 
     @Override
     public void completed(Void result, Session session) {
-        session.writeToChannel();
+        if(session.isSSL()){
+            session.doSSLHandShake();
+        }else {
+            session.writeToChannel();
+        }
     }
 
     @Override

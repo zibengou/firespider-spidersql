@@ -2,7 +2,7 @@ package com.firespider.spidersql.aio.net.http;
 
 import com.firespider.spidersql.aio.net.core.Message;
 
-import java.util.HashMap;
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -18,8 +18,19 @@ public class HttpMessage extends Message {
 
     private String body;
 
+    private long bodyLength;
+
     public HttpMessage() {
 
+    }
+
+    public HttpMessage(Message message) {
+        this.buffer = message.getBytes();
+        this.charset = message.getCharset();
+    }
+
+    public HttpMessage(Charset charset) {
+        super(charset);
     }
 
     public HttpMessage(String statusLine, Map<String, String> header, String body) {
@@ -32,6 +43,24 @@ public class HttpMessage extends Message {
     public HttpMessage(byte[] buf) {
         super(buf);
         parse(buf);
+    }
+
+
+    public HttpMessage(byte[] buf, Charset charset) {
+        super(buf, charset);
+        parse(buf);
+    }
+
+    public void setBuffer(byte[] buf, int start, int length) {
+        byte[] newBytes = new byte[length];
+        System.arraycopy(buf, start, newBytes, 0, length);
+        super.setBuffer(newBytes);
+        parse(newBytes);
+    }
+
+    public void put(byte[] buf, int start, int length) {
+        super.put(buf, start, length);
+//        parse(this.buffer);
     }
 
     void setHeader(Map<String, String> header) {
@@ -49,11 +78,18 @@ public class HttpMessage extends Message {
         this.statusLine = statusLine;
     }
 
+    public long getBodyLength() {
+        return bodyLength;
+    }
+
     protected String getStatusLine() {
         return statusLine;
     }
 
     protected Map<String, String> getHeader() {
+        if (header == null) {
+            parse(this.buffer);
+        }
         return header;
     }
 
@@ -82,20 +118,18 @@ public class HttpMessage extends Message {
         this.header = new TreeMap<>();
 
         int pos = 0;
+        int lastPos = 0;
         boolean hasStatusLine = false;
         boolean hasHeader = false;
-        StringBuilder sb = new StringBuilder();
         for (; pos < buf.length; pos++) {
             char c = (char) buf[pos];
             char next = pos + 1 >= buf.length ? 0 : (char) buf[pos + 1];
-            if (c == '\r' && next == '\n') {
+            if (c == '\r' && next == '\n' && !hasHeader) {
                 if (!hasStatusLine) {
-                    this.statusLine = sb.toString();
-                    sb.delete(0, sb.length());
+                    this.statusLine = new String(buf, lastPos, pos - lastPos, this.charset);
                     hasStatusLine = true;
                 } else {
-                    String headerLine = sb.toString();
-                    sb.delete(0, sb.length());
+                    String headerLine = new String(buf, lastPos, pos - lastPos, this.charset);
                     String[] split = headerLine.split(": ");
                     if (split.length == 2) {
                         this.header.put(split[0], split[1]);
@@ -104,12 +138,11 @@ public class HttpMessage extends Message {
                     }
                 }
                 ++pos;
-                continue;
+                lastPos = pos + 1;
             }
-            sb.append(c);
         }
-        this.body = sb.toString();
-        sb.delete(0, sb.length());
+        this.body = new String(buf, lastPos, pos - lastPos, this.charset);
+        this.bodyLength = pos - lastPos;
     }
 
 }

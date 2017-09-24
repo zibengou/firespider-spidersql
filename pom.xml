@@ -34,6 +34,11 @@
             <version>1.0.0</version>
             <classifier>sources</classifier>
         </dependency>
+        <dependency>
+            <groupId>org.voovan</groupId>
+            <artifactId>voovan-framework</artifactId>
+            <version>3.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>
