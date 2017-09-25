@@ -1,7 +1,6 @@
 package com.firespider.spidersql.aio.net.core;
 
 
-
 import javax.net.ssl.*;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,15 +9,6 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutionException;
 
-/**
- * SSL管理器
- *
- * @author helyho
- *         <p>
- *         Voovan Framework.
- *         WebSite: https://github.com/helyho/Voovan
- *         Licence: Apache v2 License
- */
 public class SSLManager {
     private KeyManagerFactory keyManagerFactory;
     private TrustManagerFactory trustManagerFactory;
@@ -28,7 +18,7 @@ public class SSLManager {
 
     private boolean handShakeDone = false;
 
-    private ByteBuffer appBuffer, netBuffer,readBuffer;
+    private ByteBuffer appBuffer, netBuffer, readBuffer;
 
     /**
      * 构造函数
@@ -113,9 +103,9 @@ public class SSLManager {
         SSLSession sslSession = engine.getSession();
         int netBufferMax = sslSession.getPacketBufferSize();
         int appBufferMax = sslSession.getApplicationBufferSize();
-        this.netBuffer = ByteBuffer.allocate(netBufferMax);
-        this.appBuffer = ByteBuffer.allocate(appBufferMax);
-        this.readBuffer = ByteBuffer.allocate(netBufferMax);
+        this.netBuffer = ByteBuffer.allocateDirect(netBufferMax);
+        this.appBuffer = ByteBuffer.allocateDirect(appBufferMax);
+        this.readBuffer = ByteBuffer.allocateDirect(netBufferMax);
     }
 
     /**
@@ -130,11 +120,17 @@ public class SSLManager {
         engine.setNeedClientAuth(needClientAuth);
     }
 
-    public void wrap(ByteBuffer in, ByteBuffer out) throws SSLException, ExecutionException, InterruptedException {
+    public void wrap(ByteBuffer in, ByteBuffer out) throws SSLException {
         out.clear();
         in.flip();
         engine.wrap(in, out);
         out.flip();
+    }
+
+    public ByteBuffer wrap(ByteBuffer in) throws SSLException {
+        netBuffer.clear();
+        engine.wrap(in, netBuffer);
+        return netBuffer;
     }
 
     /***
@@ -146,13 +142,18 @@ public class SSLManager {
      * @throws ExecutionException
      * @throws InterruptedException
      */
-    public void unwrap(ByteBuffer in, ByteBuffer out) throws SSLException, ExecutionException, InterruptedException {
+    public void unwrap(ByteBuffer in, ByteBuffer out) throws SSLException {
         out.clear();
         // TODO: 2017/9/24 SSLENGINE UNWRAP jdk异常。需要寻找解决方案。
-        while(in.hasRemaining()) {
-            in.flip();
-            engine.unwrap(in, out);
-        }
+        in.flip();
+        engine.unwrap(in, out);
+    }
+
+    public ByteBuffer unwrap(ByteBuffer in) throws SSLException {
+        appBuffer.clear();
+        in.flip();
+        engine.wrap(in, appBuffer);
+        return appBuffer;
     }
 
     public boolean doHandShake(Session session) throws IOException, ExecutionException, InterruptedException {
@@ -194,14 +195,17 @@ public class SSLManager {
      */
     private SSLEngineResult.HandshakeStatus doHandShakeUnwarp(Session session) throws IOException, ExecutionException, InterruptedException {
         int length;
-        do {
-            readBuffer.clear();
-            length = session.getSocketChannel().read(readBuffer).get();
-            unwrap(readBuffer, appBuffer);
-            session.getReadFromChannelMessage().put(appBuffer.array(), 0, appBuffer.position());
-        } while (length >= readBuffer.capacity());
+//        do {
+//            readBuffer.clear();
+//            length = session.getSocketChannel().read(readBuffer).get();
+//            unwrap(readBuffer, appBuffer);
+//            session.getReadFromChannelMessage().put(appBuffer.array(), 0, appBuffer.position());
+//        } while (length < readBuffer.capacity());
+        readBuffer.clear();
+        length = session.getSocketChannel().read(readBuffer).get();
+        unwrap(readBuffer, netBuffer);
         //如果有 HandShake Task 则执行
-        return runDelegatedTasks();
+        return engine.getHandshakeStatus();
     }
 
     /**
@@ -215,7 +219,7 @@ public class SSLManager {
         wrap(session.getWriteToChannelMessage().getBuffer(), netBuffer);
         session.getSocketChannel().write(netBuffer).get();
         //如果有 HandShake Task 则执行
-        return runDelegatedTasks();
+        return engine.getHandshakeStatus();
     }
 
     /**

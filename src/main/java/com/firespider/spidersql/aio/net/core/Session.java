@@ -89,8 +89,9 @@ public class Session {
         if (fromWrite) {
             this.socketChannel.read(readBuffer, timeout, TimeUnit.SECONDS, this, this.readHandler);
         } else {
-            if (length > 0) {
-                readFromChannelMessage.put(readBuffer.array(), 0, readBuffer.position());
+            ByteBuffer buf = getReadBuffer(true);
+            if (length >= this.bufSize) {
+                readFromChannelMessage.put(buf.array(), 0, buf.position());
                 readBuffer.clear();
                 this.socketChannel.read(readBuffer, timeout, TimeUnit.SECONDS, this, this.readHandler);
             } else {
@@ -112,7 +113,16 @@ public class Session {
     }
 
     void writeToChannel() {
-        this.socketChannel.write(this.writeToChannelMessage.getBuffer(), this, this.writeHandler);
+        ByteBuffer buf = this.getWriteToChannelMessage().getBuffer();
+        if (isSSL()) {
+            try {
+                buf = sslManager.wrap(buf);
+            } catch (SSLException e) {
+                this.customHandler.failed(e, this);
+            }
+        }
+        this.socketChannel.write(buf, this, this.writeHandler);
+
     }
 
 
@@ -165,6 +175,16 @@ public class Session {
     }
 
     public ByteBuffer getReadBuffer() {
+        return readBuffer;
+    }
+    public ByteBuffer getReadBuffer(boolean ssl) {
+        if(ssl && isSSL()){
+            try {
+                readBuffer = sslManager.unwrap(readBuffer);
+            } catch (SSLException e) {
+                e.printStackTrace();
+            }
+        }
         return readBuffer;
     }
 

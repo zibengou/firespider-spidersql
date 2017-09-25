@@ -23,8 +23,8 @@ public class ReadFromChannelHttpHandler extends ReadFromChannelHandler {
 
     @Override
     public void completed(Integer result, Session session) {
-        if (readBuffer == null) {
-            readBuffer = session.getReadBuffer();
+        if (message == null) {
+            readBuffer = session.getReadBuffer(true);
             message = new HttpMessage(session.getReadFromChannelMessage());
             message.setBuffer(readBuffer.array(), 0, readBuffer.position());
             if (message.getHeader() != null && message.getHeader().containsKey("Content-Length")) {

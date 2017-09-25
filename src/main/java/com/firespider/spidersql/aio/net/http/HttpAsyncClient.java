@@ -10,9 +10,6 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
-/**
- * Created by xiaotong.shi on 2017/9/15.
- */
 public class HttpAsyncClient extends AsyncSocketExecutor {
 
     private Map<String, String> header;
@@ -63,7 +60,7 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
     public Response get(String uri) throws InterruptedException, IOException {
         final Response[] response = new Response[1];
         Request request = new Request(uri, this.header);
-        Session session = new Session(request.getHost(), request.getPort(), request, charset);
+        Session session = parseSession(request);
         session.setReadFromChannelHandler(new ReadFromChannelHttpHandler());
         CountDownLatch latch = new CountDownLatch(1);
         handle(session, new CompletionHandler<Response, Response>() {
@@ -80,7 +77,6 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
             }
         });
         latch.await();
-//        close();
         return response[0];
 
     }
@@ -157,10 +153,8 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
             urlList.add(url);
         }
         long start = System.currentTimeMillis();
-        List<Response> responseList = client.get(urlList);
+        client.get("https://www.zhihu.com/");
         System.out.println(System.currentTimeMillis() - start);
         client.close();
-
-//        System.out.println(response.getBody());
     }
 }
