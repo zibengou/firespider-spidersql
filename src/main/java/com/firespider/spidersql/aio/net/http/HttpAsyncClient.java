@@ -25,6 +25,10 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
         charset = Charset.defaultCharset();
     }
 
+    public HttpAsyncClient(int threadNum) throws IOException {
+        super(threadNum);
+    }
+
     public HttpAsyncClient(String charset) throws IOException {
         super(Runtime.getRuntime().availableProcessors());
         this.charset = Charset.forName(charset);
