@@ -5,11 +5,15 @@ import com.firespider.spidersql.aio.net.core.Message;
 import com.firespider.spidersql.aio.net.core.Session;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
+// TODO: 2017/9/26 支持接口扫描，支持https 
 public class HttpAsyncClient extends AsyncSocketExecutor {
 
     private Map<String, String> header;
@@ -31,8 +35,8 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
         this.header = header;
     }
 
-    public List<Response> get(List<String> uriList) throws InterruptedException, IOException {
-        final List<Response> responseList = new ArrayList<>();
+    public Map<Response, Boolean> get(List<String> uriList) throws InterruptedException, IOException {
+        final Map<Response, Boolean> responseMap = new ConcurrentHashMap<>();
         List<Session> sessionList = new ArrayList<>();
         for (String uri : uriList) {
             Request request = new Request(uri, this.header);
@@ -42,19 +46,18 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
         handle(sessionList, new CompletionHandler<Response, Response>() {
             @Override
             public void completed(Response result, Response response) {
-                responseList.add(result);
+                responseMap.put(result, true);
                 latch.countDown();
             }
 
             @Override
             public void failed(Throwable exc, Response response) {
-                responseList.add(response);
+                responseMap.put(response, false);
                 latch.countDown();
             }
         });
         latch.await();
-        close();
-        return responseList;
+        return responseMap;
     }
 
     public Response get(String uri) throws InterruptedException, IOException {
@@ -94,6 +97,48 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
         Session session = parseSession(request);
         session.setReadFromChannelHandler(new ReadFromChannelHttpHandler());
         handle(session, handler);
+    }
+
+    public void handleScanPort(String host, String port, CompletionHandler<Boolean, String> handler) throws IOException {
+        Session session = new Session(host, Integer.parseInt(port));
+        scanPort(session, new CompletionHandler<Boolean, Session>() {
+            @Override
+            public void completed(Boolean result, Session attachment) {
+                handler.completed(result, attachment.getAddress().toString());
+            }
+
+            @Override
+            public void failed(Throwable exc, Session attachment) {
+                handler.failed(exc, attachment.getAddress().toString());
+            }
+        });
+
+    }
+
+    public Map<String, Boolean> scanPort(List<String> addressList) throws IOException, InterruptedException {
+        Map<String, Boolean> resMap = new ConcurrentHashMap<>();
+        CountDownLatch latch = new CountDownLatch(addressList.size());
+        for (String address : addressList) {
+            if (address.contains(":")) {
+                String[] hostPort = address.split(":");
+                handleScanPort(hostPort[0], hostPort[1], new CompletionHandler<Boolean, String>() {
+                    @Override
+                    public void completed(Boolean result, String attachment) {
+                        resMap.put(attachment, result);
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void failed(Throwable exc, String attachment) {
+                        resMap.put(attachment, false);
+                        latch.countDown();
+                    }
+                });
+            }
+
+        }
+        latch.await();
+        return resMap;
     }
 
     private Session parseSession(Request request) {
@@ -147,14 +192,15 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
 //        header.put("Accept-Encoding","gzip, deflate");
         HttpAsyncClient client = new HttpAsyncClient("GBK");
         List<String> urlList = new ArrayList<>();
-        for (int i = 154411; i < 154422; i++) {
-            String url = String.format("http://www.52ij.com/jishu/aspx/%s.html", String.valueOf(i));
-//            String url = "http://localhost/";
-            urlList.add(url);
+        List<String> hostList = new ArrayList<>();
+        for (int i = 7080; i < 8182; i++) {
+            hostList.add("www.baidu.com:" + i);
         }
         long start = System.currentTimeMillis();
-        client.get("https://www.zhihu.com/");
+//        client.get("https://www.zhihu.com/");
+        Map<String, Boolean> res = client.scanPort(hostList);
         System.out.println(System.currentTimeMillis() - start);
+        System.out.println(res);
         client.close();
     }
 }

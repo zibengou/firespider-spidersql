@@ -22,7 +22,7 @@ public class AsyncSocketExecutor {
         this.channelGroup = AsynchronousChannelGroup.withThreadPool(Executors.newFixedThreadPool(threadNum));
     }
 
-    public void execute(Session session, CompletionHandler<Message, Session> handler) throws IOException, ExecutionException, InterruptedException {
+    protected void execute(Session session, CompletionHandler<Message, Session> handler) throws IOException, ExecutionException, InterruptedException {
         AsynchronousSocketChannel sc = AsynchronousSocketChannel.open(this.channelGroup);
         session.setCustomHandler(handler);
         session.setSocketChannel(sc);
@@ -30,6 +30,24 @@ public class AsyncSocketExecutor {
         sc.setOption(StandardSocketOptions.SO_REUSEADDR, true);
         sc.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
         sc.connect(session.getAddress(), session, session.getConnectionHandler());
+    }
+
+    protected void scanPort(Session session, CompletionHandler<Boolean, Session> handler) throws IOException {
+        AsynchronousSocketChannel sc = AsynchronousSocketChannel.open(this.channelGroup);
+        session.setCustomHandler(handler);
+        session.setSocketChannel(sc);
+        sc.connect(session.getAddress(), session, new CompletionHandler<Void, Session>() {
+            @Override
+            public void completed(Void result, Session attachment) {
+                handler.completed(true, session);
+            }
+
+            @Override
+            public void failed(Throwable exc, Session attachment) {
+                handler.failed(exc, session);
+            }
+        });
+
     }
 
     public void close() throws IOException {
