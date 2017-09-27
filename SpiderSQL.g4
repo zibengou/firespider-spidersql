@@ -31,6 +31,8 @@ var                 :   C_VAR
 assign_statement    :   C_VAR ASSIGN value          # assignValue
                     |   C_VAR ASSIGN get            # assignGet
                     |   C_VAR ASSIGN save           # assignSave
+                    |   C_VAR ASSIGN scan           # assignScan
+                    |   C_VAR ASSIGN desc           # assignDesc
                     ;
 
 

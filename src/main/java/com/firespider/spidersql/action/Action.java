@@ -8,9 +8,9 @@ import java.nio.channels.CompletionHandler;
 public abstract class Action implements Runnable {
     protected Integer id;
 
-    protected CompletionHandler<GenJsonElement, Integer> handler;
+    CompletionHandler<GenJsonElement, Integer> handler;
 
-    public Action(Integer id, CompletionHandler<GenJsonElement, Integer> handler) {
+    Action(Integer id, CompletionHandler<GenJsonElement, Integer> handler) {
         this.id = id;
         this.handler = handler;
     }

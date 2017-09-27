@@ -1,4 +1,4 @@
-package com.firespider.spidersql.parser.impl;
+package com.firespider.spidersql.action;
 
 import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonObject;
@@ -9,19 +9,20 @@ import com.firespider.spidersql.lang.json.GenJsonObject;
  */
 public class ActionChecker {
 
-    public boolean check(GenJsonElement element, String type) {
+    public boolean check(GenJsonElement element, ActionManager.TYPE type) {
         boolean res = false;
         switch (type) {
-            case "get":
+            case GET:
                 res = checkGet(element);
                 break;
-            case "scan":
+            case SCAN:
                 break;
-            case "desc":
+            case DESC:
                 break;
-            case "print":
+            case PRINT:
+                res = true;
                 break;
-            case "save":
+            case SAVE:
                 break;
         }
         return res;

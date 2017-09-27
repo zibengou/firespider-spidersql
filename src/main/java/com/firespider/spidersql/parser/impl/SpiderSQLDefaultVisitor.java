@@ -1,6 +1,6 @@
 package com.firespider.spidersql.parser.impl;
 
-import com.firespider.spidersql.aio.net.http.HttpAsyncClient;
+import com.firespider.spidersql.action.ActionManager;
 import com.firespider.spidersql.lang.*;
 import com.firespider.spidersql.lang.json.*;
 import com.firespider.spidersql.parser.SpiderSQLBaseVisitor;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
 
-    private final Map<String, Gen> params;
+    private final Map<String, GenJsonElement> params;
 
     private final ActionManager actionManager;
 
@@ -32,7 +32,7 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
 
     @Override
     public Gen visitCombine_statement(SpiderSQLParser.Combine_statementContext ctx) {
-        ctx.simple_statement().forEach(sm -> visitSimple_statement(sm));
+        ctx.simple_statement().forEach(this::visitSimple_statement);
         actionManager.await(100);
         params.putAll(actionManager.getAll());
         actionManager.clear();
@@ -48,10 +48,40 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     }
 
     @Override
+    public Gen visitScan(SpiderSQLParser.ScanContext ctx) {
+        Gen gen = new Gen();
+        GenJsonObject element = (GenJsonObject) visitObj(ctx.obj());
+        Integer id = actionManager.accept(element, ActionManager.TYPE.SCAN);
+        gen.setId(id);
+        return gen;
+    }
+
+    @Override
+    public Gen visitPrint(SpiderSQLParser.PrintContext ctx) {
+        if (ctx.obj() != null) {
+            actionManager.accept((GenJsonElement) visitObj(ctx.obj()), ActionManager.TYPE.PRINT);
+        } else if (ctx.C_VAR() != null) {
+            String var = ctx.C_VAR().getText();
+            if (params.containsKey(var)) {
+                actionManager.accept(params.get(var), ActionManager.TYPE.PRINT);
+            }
+        } else {
+            ctx.c_mul_var().C_VAR().forEach(var -> {
+                String v = var.getText();
+                if (params.containsKey(v)) {
+                    actionManager.accept(params.get(v), ActionManager.TYPE.PRINT);
+                }
+            });
+        }
+        return new Gen();
+    }
+
+
+    @Override
     public Gen visitGet(SpiderSQLParser.GetContext ctx) {
         Gen gen = new Gen();
         GenJsonObject element = (GenJsonObject) visitObj(ctx.obj());
-        Integer id = actionManager.accept(element, "get");
+        Integer id = actionManager.accept(element, ActionManager.TYPE.GET);
         gen.setId(id);
         return gen;
     }
@@ -70,7 +100,7 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
             String[] props = ctx.C_VAR().getText().split("\\.");
             if (!params.containsKey(props[0]))
                 return GenJsonNull.INSTANCE;
-            element = (GenJsonElement) params.get(props[0]);
+            element = params.get(props[0]);
             for (int i = 1; i < props.length; i++) {
                 element = ((GenJsonObject) element).get(props[i]);
             }

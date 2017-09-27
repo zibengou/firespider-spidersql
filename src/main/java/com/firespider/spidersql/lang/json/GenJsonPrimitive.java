@@ -47,4 +47,13 @@ public class GenJsonPrimitive<T> extends GenJsonElement {
     public T getValue() {
         return this.value;
     }
+
+    @Override
+    public String toString() {
+        if (value instanceof String) {
+            return "\"" + value + "\"";
+        } else {
+            return value.toString();
+        }
+    }
 }

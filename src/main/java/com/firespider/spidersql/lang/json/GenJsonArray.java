@@ -68,4 +68,12 @@ public class GenJsonArray extends GenJsonElement {
         return elements.hashCode();
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (GenJsonElement element : elements) {
+            sb.append("[").append(element.toString()).append("]");
+        }
+        return sb.toString();
+    }
 }

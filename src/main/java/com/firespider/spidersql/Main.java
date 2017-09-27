@@ -14,7 +14,7 @@ import java.util.Vector;
 public class Main {
     public static void main(String[] args) {
         // TODO: 2017/9/27 命令行输入 
-        String sql="a:get{url:\"http://blog.csdn.net/cweeyii/article/details/52830144\"}";
+        String sql="a:get{url:\"http://blog.csdn.net/cweeyii/article/details/52830144\"};b:get{url:\"http://blog.csdn.net/cweeyii/article/details/52830143\"} | print a,b";
         System.out.println(System.currentTimeMillis());
         Vector vector =new Vector();
         CodePointCharStream cs = CharStreams.fromString(sql);

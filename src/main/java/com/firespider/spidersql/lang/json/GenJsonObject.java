@@ -1,6 +1,7 @@
 package com.firespider.spidersql.lang.json;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -52,5 +53,14 @@ public class GenJsonObject extends GenJsonElement {
 
     public int hashCode() {
         return this.members.hashCode();
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder("{");
+        for (Map.Entry<String, GenJsonElement> map : members.entrySet()) {
+            sb.append("\"").append(map.getKey()).append("\":").append(map.getValue().toString());
+        }
+        sb.append("}");
+        return sb.toString();
     }
 }

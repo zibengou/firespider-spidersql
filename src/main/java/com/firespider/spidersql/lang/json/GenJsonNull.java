@@ -18,4 +18,9 @@ public class GenJsonNull extends GenJsonElement{
     public boolean equals(Object other) {
         return this == other || other instanceof GenJsonNull;
     }
+
+    @Override
+    public String toString() {
+        return "null";
+    }
 }

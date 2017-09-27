@@ -1,7 +1,5 @@
-package com.firespider.spidersql.parser.impl;
+package com.firespider.spidersql.action;
 
-import com.firespider.spidersql.action.Action;
-import com.firespider.spidersql.action.GetAction;
 import com.firespider.spidersql.lang.json.GenJsonArray;
 import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonNull;
@@ -17,9 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by xiaotong.shi on 2017/9/27.
- */
 public class ActionManager {
     //变量与ID的映射关系，需要保序
     private final Map<String, Integer> varIdMap = new LinkedHashMap<>();
@@ -35,6 +30,10 @@ public class ActionManager {
         this.checker = new ActionChecker();
     }
 
+    public enum TYPE {
+        GET,SCAN,DESC,PRINT,SAVE;
+    }
+
 
     /***
      * 接收并执行动作
@@ -42,14 +41,14 @@ public class ActionManager {
      * @param type
      * @return
      */
-    public Integer accept(GenJsonElement element, String type) {
+    public Integer accept(GenJsonElement element, TYPE type) {
         Integer id = 0;
         if (!checker.check(element, type)) {
             return id;
         }
         // TODO: 2017/9/27 完善剩余action内容 
         switch (type) {
-            case "get":
+            case GET:
                 try {
                     id = acceptGet((GenJsonObject) element);
                 } catch (IOException e) {
@@ -57,13 +56,14 @@ public class ActionManager {
                     System.out.println("Get client init error!");
                 }
                 break;
-            case "scan":
+            case SCAN:
                 break;
-            case "desc":
+            case DESC:
                 break;
-            case "print":
+            case PRINT:
+                acceptPrint(element);
                 break;
-            case "save":
+            case SAVE:
                 break;
         }
         return id;
@@ -78,7 +78,7 @@ public class ActionManager {
         GenJsonArray value = new GenJsonArray();
         // TODO: 2017/9/27 确认是否会出现回调地狱
         // 在handler中对value赋值，该块堆内存会在另外N份线程中做add操作
-        Action action = new GetAction(id,new GetParam(element), new CompletionHandler<GenJsonElement, Integer>() {
+        Action action = new GetAction(id, new GetParam(element), new CompletionHandler<GenJsonElement, Integer>() {
             @Override
             public void completed(GenJsonElement result, Integer attachment) {
                 if (result instanceof GenJsonArray) {
@@ -99,6 +99,15 @@ public class ActionManager {
         return id;
     }
 
+    private Integer acceptScan(GenJsonObject element){
+        Integer id = element.hashCode();
+        return id;
+    }
+
+    private void acceptPrint(GenJsonElement element) {
+        System.out.println(element.toString());
+    }
+
     /***
      * 绑定变量名与动作ID
      * @param var
@@ -116,7 +125,7 @@ public class ActionManager {
     public boolean await(int timeout) {
         try {
             service.shutdown();
-            if(!service.isTerminated()) {
+            if (!service.isTerminated()) {
                 service.awaitTermination(timeout, TimeUnit.SECONDS);
             }
             return true;
