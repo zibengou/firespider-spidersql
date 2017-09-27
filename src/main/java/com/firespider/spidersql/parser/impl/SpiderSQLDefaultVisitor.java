@@ -1,10 +1,12 @@
 package com.firespider.spidersql.parser.impl;
 
+import com.firespider.spidersql.aio.net.http.HttpAsyncClient;
 import com.firespider.spidersql.lang.*;
 import com.firespider.spidersql.lang.json.*;
 import com.firespider.spidersql.parser.SpiderSQLBaseVisitor;
 import com.firespider.spidersql.parser.SpiderSQLParser;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,8 +14,11 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
 
     private final Map<String, Gen> params;
 
-    public SpiderSQLDefaultVisitor() {
+    private final HttpAsyncClient client;
+
+    public SpiderSQLDefaultVisitor() throws IOException {
         params = new HashMap<>();
+        client = new HttpAsyncClient();
     }
 
     @Override
