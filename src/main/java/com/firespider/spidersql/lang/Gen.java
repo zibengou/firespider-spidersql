@@ -1,13 +1,26 @@
 package com.firespider.spidersql.lang;
 
 /**
- * Created by xiaotong.shi on 2017/9/13.
+ * 基础数据结构
+ * todo id与hashcode绑定
  */
 public class Gen {
-    private long code;
+    private Integer id = 0;
+    private boolean result = true;
 
-    @Override
-    public int hashCode() {
-        return super.hashCode();
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public boolean isResult() {
+        return result;
+    }
+
+    public void setResult(boolean result) {
+        this.result = result;
     }
 }

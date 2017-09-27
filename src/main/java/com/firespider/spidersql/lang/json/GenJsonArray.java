@@ -3,13 +3,15 @@ package com.firespider.spidersql.lang.json;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GenJsonArray extends GenJsonElement {
     private final List<GenJsonElement> elements;
 
 
+    //确保线程安全
     public GenJsonArray() {
-        this.elements = new ArrayList<>();
+        this.elements = new CopyOnWriteArrayList<>();
     }
 
     @Override

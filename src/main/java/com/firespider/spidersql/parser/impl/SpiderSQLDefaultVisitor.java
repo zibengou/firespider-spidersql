@@ -14,22 +14,46 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
 
     private final Map<String, Gen> params;
 
-    private final HttpAsyncClient client;
+    private final ActionManager actionManager;
+
 
     public SpiderSQLDefaultVisitor() throws IOException {
         params = new HashMap<>();
-        client = new HttpAsyncClient();
+        actionManager = new ActionManager(10);
     }
 
+    // TODO: 2017/9/27 处理多线程与区块功能
+    @Override
+    public Gen visitExecuteSimple(SpiderSQLParser.ExecuteSimpleContext ctx) {
+        Gen res = visitCombine_statement(ctx.combine_statement());
+        actionManager.close();
+        return res;
+    }
 
+    @Override
+    public Gen visitCombine_statement(SpiderSQLParser.Combine_statementContext ctx) {
+        ctx.simple_statement().forEach(sm -> visitSimple_statement(sm));
+        actionManager.await(100);
+        params.putAll(actionManager.getAll());
+        actionManager.clear();
+        return new Gen();
+    }
 
+    @Override
+    public Gen visitAssignGet(SpiderSQLParser.AssignGetContext ctx) {
+        String var = ctx.C_VAR().getText();
+        Integer id = visitGet(ctx.get()).getId();
+        actionManager.bind(var, id);
+        return new Gen();
+    }
 
     @Override
     public Gen visitGet(SpiderSQLParser.GetContext ctx) {
-        System.out.println(System.currentTimeMillis());
+        Gen gen = new Gen();
         GenJsonObject element = (GenJsonObject) visitObj(ctx.obj());
-        System.out.println(System.currentTimeMillis());
-        return null;
+        Integer id = actionManager.accept(element, "get");
+        gen.setId(id);
+        return gen;
     }
 
     @Override

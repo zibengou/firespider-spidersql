@@ -5,8 +5,7 @@ import java.net.StandardSocketOptions;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class AsyncSocketExecutor {
 
@@ -19,7 +18,8 @@ public class AsyncSocketExecutor {
     }
 
     public AsyncSocketExecutor(int threadNum) throws IOException {
-        this.channelGroup = AsynchronousChannelGroup.withThreadPool(Executors.newFixedThreadPool(threadNum));
+        ExecutorService service = Executors.newFixedThreadPool(threadNum);
+        this.channelGroup = AsynchronousChannelGroup.withThreadPool(service);
     }
 
     protected void execute(Session session, CompletionHandler<Message, Session> handler) throws IOException, ExecutionException, InterruptedException {

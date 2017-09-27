@@ -8,11 +8,13 @@ import org.antlr.v4.runtime.CodePointCharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.io.IOException;
 import java.util.Vector;
 
 public class Main {
     public static void main(String[] args) {
-        String sql="a:get{code:10000,data:b.name}";
+        // TODO: 2017/9/27 命令行输入 
+        String sql="a:get{url:\"http://blog.csdn.net/cweeyii/article/details/52830144\"}";
         System.out.println(System.currentTimeMillis());
         Vector vector =new Vector();
         CodePointCharStream cs = CharStreams.fromString(sql);
@@ -20,7 +22,12 @@ public class Main {
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         SpiderSQLParser parser = new SpiderSQLParser(tokenStream);
         ParseTree tree = parser.spidersql();
-        SpiderSQLDefaultVisitor visitor = new SpiderSQLDefaultVisitor();
+        SpiderSQLDefaultVisitor visitor = null;
+        try {
+            visitor = new SpiderSQLDefaultVisitor();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         visitor.visit(tree);
     }
 }

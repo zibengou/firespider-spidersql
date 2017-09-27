@@ -1,9 +1,21 @@
 package com.firespider.spidersql.action;
 
-import com.firespider.spidersql.lang.Gen;
+import com.firespider.spidersql.lang.json.GenJsonElement;
+import com.firespider.spidersql.lang.json.GenJsonNull;
 
-import java.util.concurrent.Callable;
+import java.nio.channels.CompletionHandler;
 
-public abstract class Action implements Callable<Gen>{
-    public abstract Gen call();
+public abstract class Action implements Runnable {
+    protected Integer id;
+
+    protected CompletionHandler<GenJsonElement, Integer> handler;
+
+    public Action(Integer id, CompletionHandler<GenJsonElement, Integer> handler) {
+        this.id = id;
+        this.handler = handler;
+    }
+
+    public void run() {
+        handler.completed(GenJsonNull.INSTANCE, this.id);
+    }
 }

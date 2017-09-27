@@ -21,6 +21,10 @@ public class Response extends HttpMessage {
         this.request = request;
     }
 
+    public Request getRequest() {
+        return request;
+    }
+
     public String getBody() {
         return super.getBody();
     }

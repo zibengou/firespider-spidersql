@@ -29,15 +29,6 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
         super(threadNum);
     }
 
-    public HttpAsyncClient(String charset) throws IOException {
-        super(Runtime.getRuntime().availableProcessors());
-        this.charset = Charset.forName(charset);
-    }
-
-    public HttpAsyncClient(Map<String, String> header, String charset) throws IOException {
-        this(charset);
-        this.header = header;
-    }
 
     public Map<Response, Boolean> get(List<String> uriList) throws InterruptedException, IOException {
         final Map<Response, Boolean> responseMap = new ConcurrentHashMap<>();
@@ -162,6 +153,12 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
         }
     }
 
+    /**
+     * 处理请求
+     * todo 支持请求转发，异常重试功能
+     * @param session
+     * @param handler
+     */
     private void handle(Session session, CompletionHandler<Response, Response> handler) {
         Request request = (Request) session.getWriteToChannelMessage();
         try {
@@ -185,26 +182,25 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
 
     }
 
+    public Map<String, String> getHeader() {
+        return header;
+    }
+
+    public void setHeader(Map<String, String> header) {
+        this.header = header;
+    }
+
+    public Charset getCharset() {
+        return charset;
+    }
+
+    public void setCharset(Charset charset) {
+        this.charset = charset;
+    }
+
     public void close() throws IOException {
         super.close();
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        Map<String, String> header = new HashMap<>();
-//        header.put("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
-        // TODO: 2017/9/24 底层支持各种压缩格式 
-//        header.put("Accept-Encoding","gzip, deflate");
-        HttpAsyncClient client = new HttpAsyncClient("GBK");
-        List<String> urlList = new ArrayList<>();
-        List<String> hostList = new ArrayList<>();
-        for (int i = 7080; i < 8182; i++) {
-            hostList.add("www.baidu.com:" + i);
-        }
-        long start = System.currentTimeMillis();
-//        client.get("https://www.zhihu.com/");
-        Map<String, Boolean> res = client.scanPort(hostList);
-        System.out.println(System.currentTimeMillis() - start);
-        System.out.println(res);
-        client.close();
-    }
+
 }

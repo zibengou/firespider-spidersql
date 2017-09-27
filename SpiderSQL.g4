@@ -1,4 +1,4 @@
-grammar SpiderSQL;
+ grammar SpiderSQL;
 /** 初始任务 **/
 spidersql           :   multiple_statement      # executeMultiple
                     |   combine_statement       # executeSimple
