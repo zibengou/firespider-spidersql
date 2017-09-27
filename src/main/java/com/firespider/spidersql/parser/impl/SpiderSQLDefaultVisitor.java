@@ -21,6 +21,9 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
         client = new HttpAsyncClient();
     }
 
+
+
+
     @Override
     public Gen visitGet(SpiderSQLParser.GetContext ctx) {
         System.out.println(System.currentTimeMillis());
@@ -52,7 +55,7 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
         } else if (ctx.array() != null) {
             element = (GenJsonArray) visitArray(ctx.array());
         } else {
-            if (ctx.getText() == "null") {
+            if (ctx.getText().equals("null")) {
                 element = GenJsonNull.INSTANCE;
             } else {
                 element = new GenJsonPrimitive<>(Boolean.parseBoolean(ctx.getText()));
