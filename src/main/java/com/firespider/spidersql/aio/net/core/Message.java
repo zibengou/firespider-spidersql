@@ -67,15 +67,13 @@ public class Message {
 
     public byte[] getEffectBytes() {
         byte[] res = new byte[this.position];
-        for (int i = 0; i < this.position; i++) {
-            res[i] = this.buffer[i];
-        }
+        System.arraycopy(this.buffer, 0, res, 0, this.position);
         return res;
     }
 
     public byte[] getBytes() {
-        byte[] res = new byte[capacity];
-        System.arraycopy(buffer, 0, res, 0, capacity);
+        byte[] res = new byte[this.capacity];
+        System.arraycopy(this.buffer, 0, res, 0, this.capacity);
         return res;
     }
 
