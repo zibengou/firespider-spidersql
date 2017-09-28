@@ -1,19 +1,22 @@
 package com.firespider.spidersql.action;
 
+import com.firespider.spidersql.action.model.Param;
 import com.firespider.spidersql.lang.json.GenJsonElement;
 
+import java.io.IOException;
 import java.nio.channels.CompletionHandler;
 
 /**
  * Created by xiaotong.shi on 2017/9/14.
  */
 public class DescAction extends Action {
-    public DescAction(Integer id, CompletionHandler<GenJsonElement, Integer> handler) {
-        super(id, handler);
+    DescAction(Integer id, Param param, CompletionHandler<GenJsonElement, Integer> handler) {
+        super(id, param, handler);
     }
 
     @Override
-    public void run() {
-        super.run();
+    void handle() throws IOException, InterruptedException {
+
     }
+
 }

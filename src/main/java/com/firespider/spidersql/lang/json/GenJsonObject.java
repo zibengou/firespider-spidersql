@@ -58,8 +58,9 @@ public class GenJsonObject extends GenJsonElement {
     public String toString() {
         StringBuilder sb = new StringBuilder("{");
         for (Map.Entry<String, GenJsonElement> map : members.entrySet()) {
-            sb.append("\"").append(map.getKey()).append("\":").append(map.getValue().toString());
+            sb.append("\"").append(map.getKey()).append("\":").append(map.getValue().toString()).append(",");
         }
+        sb.deleteCharAt(sb.length()-1);
         sb.append("}");
         return sb.toString();
     }

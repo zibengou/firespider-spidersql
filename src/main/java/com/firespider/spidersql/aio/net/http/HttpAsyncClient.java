@@ -5,7 +5,6 @@ import com.firespider.spidersql.aio.net.core.Message;
 import com.firespider.spidersql.aio.net.core.Session;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.Charset;
@@ -29,7 +28,7 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
         super(threadNum);
     }
 
-
+    // TODO: 2017/9/28 决定是否需要为上层封装同步实现 
     public Map<Response, Boolean> get(List<String> uriList) throws InterruptedException, IOException {
         final Map<Response, Boolean> responseMap = new ConcurrentHashMap<>();
         List<Session> sessionList = new ArrayList<>();
@@ -94,46 +93,30 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
         handle(session, handler);
     }
 
-    public void handleScanPort(String host, String port, CompletionHandler<Boolean, String> handler) throws IOException {
+    public void handleScanPort(String host, String port, CompletionHandler<Boolean, String[]> handler) throws IOException {
         Session session = new Session(host, Integer.parseInt(port));
         scanPort(session, new CompletionHandler<Boolean, Session>() {
             @Override
             public void completed(Boolean result, Session attachment) {
-                handler.completed(result, attachment.getAddress().toString());
+                String[] res = new String[3];
+                InetSocketAddress address = attachment.getAddress();
+                res[0] = address.getAddress().getHostAddress();
+                res[1] = address.getAddress().getHostName();
+                res[2] = String.valueOf(address.getPort());
+                handler.completed(result, res);
             }
 
             @Override
             public void failed(Throwable exc, Session attachment) {
-                handler.failed(exc, attachment.getAddress().toString());
+                String[] res = new String[3];
+                InetSocketAddress address = attachment.getAddress();
+                res[0] = address.getAddress().getHostAddress();
+                res[1] = address.getAddress().getHostName();
+                res[2] = String.valueOf(address.getPort());
+                handler.failed(exc, res);
             }
         });
 
-    }
-
-    public Map<String, Boolean> scanPort(List<String> addressList) throws IOException, InterruptedException {
-        Map<String, Boolean> resMap = new ConcurrentHashMap<>();
-        CountDownLatch latch = new CountDownLatch(addressList.size());
-        for (String address : addressList) {
-            if (address.contains(":")) {
-                String[] hostPort = address.split(":");
-                handleScanPort(hostPort[0], hostPort[1], new CompletionHandler<Boolean, String>() {
-                    @Override
-                    public void completed(Boolean result, String attachment) {
-                        resMap.put(attachment, result);
-                        latch.countDown();
-                    }
-
-                    @Override
-                    public void failed(Throwable exc, String attachment) {
-                        resMap.put(attachment, false);
-                        latch.countDown();
-                    }
-                });
-            }
-
-        }
-        latch.await();
-        return resMap;
     }
 
     private Session parseSession(Request request) {
@@ -156,6 +139,7 @@ public class HttpAsyncClient extends AsyncSocketExecutor {
     /**
      * 处理请求
      * todo 支持请求转发，异常重试功能
+     *
      * @param session
      * @param handler
      */

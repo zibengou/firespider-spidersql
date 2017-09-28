@@ -48,6 +48,14 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     }
 
     @Override
+    public Gen visitAssignScan(SpiderSQLParser.AssignScanContext ctx) {
+        String var = ctx.C_VAR().getText();
+        Integer id = visitScan(ctx.scan()).getId();
+        actionManager.bind(var, id);
+        return new Gen();
+    }
+
+    @Override
     public Gen visitScan(SpiderSQLParser.ScanContext ctx) {
         Gen gen = new Gen();
         GenJsonObject element = (GenJsonObject) visitObj(ctx.obj());

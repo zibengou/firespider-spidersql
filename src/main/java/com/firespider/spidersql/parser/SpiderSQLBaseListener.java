@@ -172,6 +172,30 @@ public class SpiderSQLBaseListener implements SpiderSQLListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterAssignScan(SpiderSQLParser.AssignScanContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAssignScan(SpiderSQLParser.AssignScanContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAssignDesc(SpiderSQLParser.AssignDescContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAssignDesc(SpiderSQLParser.AssignDescContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterGet(SpiderSQLParser.GetContext ctx) { }
 	/**
 	 * {@inheritDoc}

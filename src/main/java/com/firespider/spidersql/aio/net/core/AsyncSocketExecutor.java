@@ -5,11 +5,14 @@ import java.net.StandardSocketOptions;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.nio.channels.SocketChannel;
 import java.util.concurrent.*;
 
 public class AsyncSocketExecutor {
 
     private final AsynchronousChannelGroup channelGroup;
+
+    private final ExecutorService service;
 
     private static final int THREAD_NUM = 20;
 
@@ -18,7 +21,7 @@ public class AsyncSocketExecutor {
     }
 
     public AsyncSocketExecutor(int threadNum) throws IOException {
-        ExecutorService service = Executors.newFixedThreadPool(threadNum);
+        this.service = Executors.newFixedThreadPool(threadNum);
         this.channelGroup = AsynchronousChannelGroup.withThreadPool(service);
     }
 
@@ -47,7 +50,6 @@ public class AsyncSocketExecutor {
                 handler.failed(exc, session);
             }
         });
-
     }
 
     public void close() throws IOException {

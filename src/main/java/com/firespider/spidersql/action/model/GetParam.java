@@ -1,6 +1,5 @@
-package com.firespider.spidersql.lang.model;
+package com.firespider.spidersql.action.model;
 
-import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonObject;
 
 import java.util.Map;
@@ -8,11 +7,11 @@ import java.util.Map;
 /**
  * Created by xiaotong.shi on 2017/9/27.
  */
-public class GetParam {
+public class GetParam extends Param {
     private String url;
     private String charset;
-    private Integer timeout;
 
+    // TODO: 2017/9/28 定义正则解析模型 
     private Map<String,String[]> regrexMap;
     private Map<String,String> header;
 
@@ -34,14 +33,6 @@ public class GetParam {
 
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    public Integer getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(Integer timeout) {
-        this.timeout = timeout;
     }
 
     public Map<String, String> getHeader() {

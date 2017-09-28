@@ -154,6 +154,30 @@ public interface SpiderSQLListener extends ParseTreeListener {
 	 */
 	void exitAssignSave(SpiderSQLParser.AssignSaveContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code assignScan}
+	 * labeled alternative in {@link SpiderSQLParser#assign_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterAssignScan(SpiderSQLParser.AssignScanContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code assignScan}
+	 * labeled alternative in {@link SpiderSQLParser#assign_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitAssignScan(SpiderSQLParser.AssignScanContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code assignDesc}
+	 * labeled alternative in {@link SpiderSQLParser#assign_statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterAssignDesc(SpiderSQLParser.AssignDescContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code assignDesc}
+	 * labeled alternative in {@link SpiderSQLParser#assign_statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitAssignDesc(SpiderSQLParser.AssignDescContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SpiderSQLParser#get}.
 	 * @param ctx the parse tree
 	 */

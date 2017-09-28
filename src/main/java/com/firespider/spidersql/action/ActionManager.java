@@ -1,10 +1,11 @@
 package com.firespider.spidersql.action;
 
+import com.firespider.spidersql.action.model.ScanParam;
 import com.firespider.spidersql.lang.json.GenJsonArray;
 import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonNull;
 import com.firespider.spidersql.lang.json.GenJsonObject;
-import com.firespider.spidersql.lang.model.GetParam;
+import com.firespider.spidersql.action.model.GetParam;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
@@ -31,7 +32,7 @@ public class ActionManager {
     }
 
     public enum TYPE {
-        GET,SCAN,DESC,PRINT,SAVE;
+        GET, SCAN, DESC, PRINT, SAVE;
     }
 
 
@@ -46,25 +47,26 @@ public class ActionManager {
         if (!checker.check(element, type)) {
             return id;
         }
-        // TODO: 2017/9/27 完善剩余action内容 
-        switch (type) {
-            case GET:
-                try {
+        // TODO: 2017/9/27 完善剩余action内容
+        try {
+            switch (type) {
+                case GET:
                     id = acceptGet((GenJsonObject) element);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    System.out.println("Get client init error!");
-                }
-                break;
-            case SCAN:
-                break;
-            case DESC:
-                break;
-            case PRINT:
-                acceptPrint(element);
-                break;
-            case SAVE:
-                break;
+                    break;
+                case SCAN:
+                    id = acceptScan((GenJsonObject) element);
+                    break;
+                case DESC:
+                    break;
+                case PRINT:
+                    acceptPrint(element);
+                    break;
+                case SAVE:
+                    break;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println(type + " init error!");
         }
         return id;
     }
@@ -99,8 +101,23 @@ public class ActionManager {
         return id;
     }
 
-    private Integer acceptScan(GenJsonObject element){
+    private Integer acceptScan(GenJsonObject element) throws IOException {
         Integer id = element.hashCode();
+        GenJsonArray value = new GenJsonArray();
+        Action action = new ScanAction(id, new ScanParam(element), new CompletionHandler<GenJsonElement, Integer>() {
+            @Override
+            public void completed(GenJsonElement result, Integer attachment) {
+                System.out.println(result);
+                value.add(result);
+            }
+
+            @Override
+            public void failed(Throwable exc, Integer attachment) {
+
+            }
+        });
+        idData.put(id, value);
+        service.execute(action);
         return id;
     }
 

@@ -97,6 +97,20 @@ public interface SpiderSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitAssignSave(SpiderSQLParser.AssignSaveContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code assignScan}
+	 * labeled alternative in {@link SpiderSQLParser#assign_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAssignScan(SpiderSQLParser.AssignScanContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code assignDesc}
+	 * labeled alternative in {@link SpiderSQLParser#assign_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAssignDesc(SpiderSQLParser.AssignDescContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SpiderSQLParser#get}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

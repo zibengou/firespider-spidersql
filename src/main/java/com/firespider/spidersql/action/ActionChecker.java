@@ -16,6 +16,7 @@ public class ActionChecker {
                 res = checkGet(element);
                 break;
             case SCAN:
+                res = checkScan(element);
                 break;
             case DESC:
                 break;
@@ -31,6 +32,15 @@ public class ActionChecker {
     private boolean checkGet(GenJsonElement element) {
         if (element instanceof GenJsonObject) {
             if (((GenJsonObject) element).has("url")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkScan(GenJsonElement element) {
+        if (element instanceof GenJsonObject) {
+            if (((GenJsonObject) element).has("host") && ((GenJsonObject) element).has("port")) {
                 return true;
             }
         }
