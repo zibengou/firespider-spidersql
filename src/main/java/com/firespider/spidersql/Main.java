@@ -9,14 +9,30 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.IOException;
+import java.util.Scanner;
 import java.util.Vector;
 
 public class Main {
     public static void main(String[] args) {
-        // TODO: 2017/9/27 命令行输入 
-        String sql="a:get{url:\"http://blog.csdn.net/cweeyii/article/details/52830144\"};b:get{url:\"http://blog.csdn.net/cweeyii/article/details/52830143\"} | print a,b";
-        System.out.println(System.currentTimeMillis());
-        Vector vector =new Vector();
+        printContent();
+        handleInput();
+    }
+
+    private static void handleInput() {
+        Scanner sc = new Scanner(System.in);
+        while (true) {
+            System.out.print("SpiderSQL: ");
+            String in = sc.nextLine();
+            if ("exit".equals(in)) {
+                break;
+            } else {
+                executeSql(in);
+            }
+        }
+
+    }
+
+    private static void executeSql(String sql) {
         CodePointCharStream cs = CharStreams.fromString(sql);
         SpiderSQLLexer lexer = new SpiderSQLLexer(cs);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
@@ -28,6 +44,12 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        assert visitor != null;
         visitor.visit(tree);
+    }
+
+    private static void printContent() {
+        System.out.println("******************* Welcome to SpiderSQL *******************");
+        System.out.println("*******************                      *******************");
     }
 }

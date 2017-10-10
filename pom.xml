@@ -18,16 +18,6 @@
             <artifactId>antlr4-runtime</artifactId>
             <version>4.7</version>
         </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.8.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.smartboot.socket</groupId>
-            <artifactId>aio-core</artifactId>
-            <version>1.0.0</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -48,7 +38,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.firespider.spidersql.Test</mainClass>
+                            <mainClass>com.firespider.spidersql.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
