@@ -10,7 +10,7 @@ import java.nio.channels.CompletionHandler;
  * Created by xiaotong.shi on 2017/9/14.
  */
 public class SaveAction extends Action {
-    SaveAction(Integer id, Param param, CompletionHandler<GenJsonElement, Integer> handler) {
+    SaveAction(Integer id, Param param, CompletionHandler<GenJsonElement, Boolean> handler) {
         super(id, param, handler);
     }
 

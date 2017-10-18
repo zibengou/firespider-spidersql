@@ -6,15 +6,13 @@ import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonNull;
 import com.firespider.spidersql.lang.json.GenJsonObject;
 import com.firespider.spidersql.action.model.GetParam;
+import com.firespider.spidersql.queue.QueueManager;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class ActionManager {
     //变量与ID的映射关系，需要保序
@@ -26,9 +24,12 @@ public class ActionManager {
 
     private final ExecutorService service;
 
+    private final QueueManager queueManager;
+
     public ActionManager(int threadNum) {
         this.service = Executors.newFixedThreadPool(threadNum);
         this.checker = new ActionChecker();
+        this.queueManager = new QueueManager();
     }
 
     public enum TYPE {
@@ -72,26 +73,29 @@ public class ActionManager {
     }
 
     private Integer acceptGet(GenJsonObject element) throws IOException {
-        String url = element.get("url").getAsString();
-        Integer id = url.hashCode();
+        Integer id = element.hashCode();
         if (idData.containsKey(id)) {
             return id;
         }
         GenJsonArray value = new GenJsonArray();
         // TODO: 2017/9/27 确认是否会出现回调地狱
         // 在handler中对value赋值，该块堆内存会在另外N份线程中做add操作
-        Action action = new GetAction(id, new GetParam(element), new CompletionHandler<GenJsonElement, Integer>() {
+        Action action = new GetAction(id, new GetParam(element), new CompletionHandler<GenJsonElement, Boolean>() {
             @Override
-            public void completed(GenJsonElement result, Integer attachment) {
-                if (result instanceof GenJsonArray) {
-                    value.addAll((GenJsonArray) result);
+            public void completed(GenJsonElement result, Boolean attachment) {
+                if (attachment) {
+                    if (result instanceof GenJsonArray) {
+                        value.addAll((GenJsonArray) result);
+                    } else {
+                        value.add(result);
+                    }
                 } else {
-                    value.add(result);
+                    value.add(GenJsonNull.INSTANCE);
                 }
             }
 
             @Override
-            public void failed(Throwable exc, Integer attachment) {
+            public void failed(Throwable exc, Boolean attachment) {
                 value.add(GenJsonNull.INSTANCE);
             }
         });
@@ -104,15 +108,17 @@ public class ActionManager {
     private Integer acceptScan(GenJsonObject element) throws IOException {
         Integer id = element.hashCode();
         GenJsonArray value = new GenJsonArray();
-        Action action = new ScanAction(id, new ScanParam(element), new CompletionHandler<GenJsonElement, Integer>() {
+        Action action = new ScanAction(id, new ScanParam(element), new CompletionHandler<GenJsonElement, Boolean>() {
             @Override
-            public void completed(GenJsonElement result, Integer attachment) {
-                System.out.println(result);
-                value.add(result);
+            public void completed(GenJsonElement result, Boolean attachment) {
+                if (attachment) {
+                    System.out.println(result);
+                    value.add(result);
+                }
             }
 
             @Override
-            public void failed(Throwable exc, Integer attachment) {
+            public void failed(Throwable exc, Boolean attachment) {
 
             }
         });

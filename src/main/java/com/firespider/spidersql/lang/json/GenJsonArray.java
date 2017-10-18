@@ -70,11 +70,11 @@ public class GenJsonArray extends GenJsonElement {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("[");
+        StringBuilder sb = new StringBuilder("[\n");
         for (GenJsonElement element : elements) {
-            sb.append(element.toString()).append(",");
+            sb.append(element.toString()).append(",\n");
         }
-        sb.deleteCharAt(sb.length() - 1).append("]");
+        sb.deleteCharAt(sb.length() - 2).append("]");
         return sb.toString();
     }
 }

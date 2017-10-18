@@ -36,20 +36,30 @@ public class AsyncSocketExecutor {
     }
 
     protected void scanPort(Session session, CompletionHandler<Boolean, Session> handler) throws IOException {
-        AsynchronousSocketChannel sc = AsynchronousSocketChannel.open(this.channelGroup);
-        session.setCustomHandler(handler);
-        session.setSocketChannel(sc);
-        sc.connect(session.getAddress(), session, new CompletionHandler<Void, Session>() {
-            @Override
-            public void completed(Void result, Session attachment) {
-                handler.completed(true, session);
-            }
 
-            @Override
-            public void failed(Throwable exc, Session attachment) {
-                handler.failed(exc, session);
+        this.service.execute(() -> {
+            try {
+                AsynchronousSocketChannel sc = AsynchronousSocketChannel.open(this.channelGroup);
+                session.setCustomHandler(handler);
+                session.setSocketChannel(sc);
+                sc.connect(session.getAddress()).get(100L, TimeUnit.MILLISECONDS);
+                handler.completed(true, session);
+            } catch (InterruptedException | ExecutionException | IOException | TimeoutException e) {
+                handler.completed(false, session);
             }
         });
+
+//        sc.connect(session.getAddress(), session, new CompletionHandler<Void, Session>() {
+//            @Override
+//            public void completed(Void result, Session attachment) {
+//                handler.completed(true, session);
+//            }
+//
+//            @Override
+//            public void failed(Throwable exc, Session attachment) {
+//                handler.failed(exc, session);
+//            }
+//        });
     }
 
     public void close() throws IOException {

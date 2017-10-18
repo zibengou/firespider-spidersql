@@ -15,9 +15,9 @@ public abstract class Action implements Runnable {
     Param param;
 
     //回调方法
-    CompletionHandler<GenJsonElement, Integer> handler;
+    CompletionHandler<GenJsonElement, Boolean> handler;
 
-    Action(Integer id, Param param, CompletionHandler<GenJsonElement, Integer> handler) {
+    Action(Integer id, Param param, CompletionHandler<GenJsonElement, Boolean> handler) {
         this.id = id;
         this.param = param;
         this.handler = handler;

@@ -21,7 +21,7 @@ public class Main {
     private static void handleInput() {
         Scanner sc = new Scanner(System.in);
         while (true) {
-            System.out.print("SpiderSQL: ");
+            System.out.print("\rSpiderSQL: ");
             String in = sc.nextLine();
             if ("exit".equals(in)) {
                 break;

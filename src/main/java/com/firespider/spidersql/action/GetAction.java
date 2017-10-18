@@ -1,7 +1,9 @@
 package com.firespider.spidersql.action;
 
-import com.firespider.spidersql.aio.net.http.HttpAsyncClient;
-import com.firespider.spidersql.aio.net.http.Response;
+import com.firespider.spidersql.io.net.Format;
+import com.firespider.spidersql.io.net.HttpAsyncClient;
+import com.firespider.spidersql.io.net.Response;
+import com.firespider.spidersql.lang.json.GenJsonArray;
 import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonObject;
 import com.firespider.spidersql.action.model.GetParam;
@@ -9,9 +11,9 @@ import com.firespider.spidersql.action.model.GetParam;
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by xiaotong.shi on 2017/9/14.
@@ -19,9 +21,13 @@ import java.util.concurrent.CountDownLatch;
 public class GetAction extends Action {
     private final HttpAsyncClient client;
 
-    public GetAction(Integer id, GetParam param, CompletionHandler<GenJsonElement, Integer> handler) throws IOException {
+    private static final int thread = 200;
+
+    private static final int HOLE_TIMEOUT = 60 * 60;
+
+    public GetAction(Integer id, GetParam param, CompletionHandler<GenJsonElement, Boolean> handler) throws IOException {
         super(id, param, handler);
-        client = new HttpAsyncClient();
+        client = new HttpAsyncClient(thread);
     }
 
     /***
@@ -41,17 +47,23 @@ public class GetAction extends Action {
 
     /***
      * 解析URL
-     * 1. 普通链接
-     * 2. www.XXX.%s.html(100-111) | www.XXX.%s.html(100,101,102)
-     * todo 解析类型二链接
-     * @param url
+     * @param element
      * @return
      */
-    private List<String> parseUrl(String url) {
+    private List<String> parseUrl(GenJsonElement element) {
         List<String> urlList = new ArrayList<>();
-        urlList.add(url);
+        if (element instanceof GenJsonArray) {
+            Iterator<GenJsonElement> iterator = element.getAsArray().iterator();
+            while (iterator.hasNext()) {
+                String url = iterator.next().getAsString();
+                urlList.addAll(Format.parseSingleUrl(url));
+            }
+        } else {
+            urlList.addAll(Format.parseSingleUrl(element.getAsString()));
+        }
         return urlList;
     }
+
 
     /***
      * 请求数据
@@ -60,24 +72,27 @@ public class GetAction extends Action {
     void handle() throws IOException, InterruptedException {
         List<String> urlList = parse((GetParam) param);
         CountDownLatch latch = new CountDownLatch(urlList.size());
-        client.handleGet(urlList, new CompletionHandler<Response, Response>() {
-            GenJsonObject obj = new GenJsonObject();
+        urlList.forEach(url -> {
+            client.handleGet(url, new CompletionHandler<Response, String>() {
+                GenJsonObject obj = new GenJsonObject();
 
-            @Override
-            public void completed(Response result, Response attachment) {
-                obj.addPrimitive("content", result.getBody());
-                handler.completed(obj, result.getRequest().getUrl().hashCode());
-                latch.countDown();
-            }
+                @Override
+                public void completed(Response result, String attachment) {
+                    obj.addPrimitive("body", result.getBody());
+                    obj.addPrimitive("url", attachment);
+                    handler.completed(obj, true);
+                    latch.countDown();
+                }
 
-            @Override
-            public void failed(Throwable exc, Response attachment) {
-                obj.addPrimitive("content", attachment.getBody());
-                handler.completed(obj, attachment.getRequest().getUrl().hashCode());
-                latch.countDown();
-            }
+                @Override
+                public void failed(Throwable exc, String attachment) {
+                    obj.addPrimitive("url", attachment);
+                    handler.completed(obj, false);
+                    latch.countDown();
+                }
+            });
         });
-        latch.await();
+        latch.await(HOLE_TIMEOUT, TimeUnit.SECONDS);
         client.close();
     }
 
