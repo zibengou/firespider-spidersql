@@ -8,6 +8,13 @@ public class Gen {
     private Integer id = 0;
     private boolean result = true;
 
+    public Gen() {
+    }
+
+    public Gen(Integer id) {
+        this.id = id;
+    }
+
     public Integer getId() {
         return id;
     }

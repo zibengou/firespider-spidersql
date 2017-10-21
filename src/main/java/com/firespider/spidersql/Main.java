@@ -8,9 +8,7 @@ import org.antlr.v4.runtime.CodePointCharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.io.IOException;
 import java.util.Scanner;
-import java.util.Vector;
 
 public class Main {
     public static void main(String[] args) {
@@ -38,13 +36,7 @@ public class Main {
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         SpiderSQLParser parser = new SpiderSQLParser(tokenStream);
         ParseTree tree = parser.spidersql();
-        SpiderSQLDefaultVisitor visitor = null;
-        try {
-            visitor = new SpiderSQLDefaultVisitor();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        assert visitor != null;
+        SpiderSQLDefaultVisitor visitor = new SpiderSQLDefaultVisitor();
         visitor.visit(tree);
     }
 

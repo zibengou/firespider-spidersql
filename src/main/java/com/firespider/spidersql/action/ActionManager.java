@@ -18,13 +18,11 @@ public class ActionManager {
     //变量与ID的映射关系，需要保序
     private final Map<String, Integer> varIdMap = new LinkedHashMap<>();
     //ID与数据结果映射关系，线程安全
-    private final Map<Integer, GenJsonElement> idData = new ConcurrentHashMap<>();
-
+//    private final Map<Integer, GenJsonElement> idData = new ConcurrentHashMap<>();
+    private final QueueManager queueManager;
     private final ActionChecker checker;
 
     private final ExecutorService service;
-
-    private final QueueManager queueManager;
 
     public ActionManager(int threadNum) {
         this.service = Executors.newFixedThreadPool(threadNum);
@@ -44,18 +42,23 @@ public class ActionManager {
      * @return
      */
     public Integer accept(GenJsonElement element, TYPE type) {
-        Integer id = 0;
+        Integer id = element.hashCode();
+        Action action = null;
+        if (queueManager.exists(id)) {
+            return id;
+        }
         if (!checker.check(element, type)) {
             return id;
         }
+        queueManager.regist(id);
         // TODO: 2017/9/27 完善剩余action内容
         try {
             switch (type) {
                 case GET:
-                    id = acceptGet((GenJsonObject) element);
+                    action = acceptGet((GenJsonObject) element, id);
                     break;
                 case SCAN:
-                    id = acceptScan((GenJsonObject) element);
+                    action = acceptScan((GenJsonObject) element, id);
                     break;
                 case DESC:
                     break;
@@ -64,19 +67,21 @@ public class ActionManager {
                     break;
                 case SAVE:
                     break;
+                default:
+                    return id;
             }
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println(type + " init error!");
         }
+        if (action != null) {
+            service.execute(action);
+        }
         return id;
     }
 
-    private Integer acceptGet(GenJsonObject element) throws IOException {
-        Integer id = element.hashCode();
-        if (idData.containsKey(id)) {
-            return id;
-        }
+    private Action acceptGet(GenJsonObject element, Integer id) throws IOException {
+
         GenJsonArray value = new GenJsonArray();
         // TODO: 2017/9/27 确认是否会出现回调地狱
         // 在handler中对value赋值，该块堆内存会在另外N份线程中做add操作
@@ -85,12 +90,12 @@ public class ActionManager {
             public void completed(GenJsonElement result, Boolean attachment) {
                 if (attachment) {
                     if (result instanceof GenJsonArray) {
-                        value.addAll((GenJsonArray) result);
+                        result.getAsArray().iterator().forEachRemaining(ele -> queueManager.publish(id, ele));
                     } else {
-                        value.add(result);
+                        queueManager.publish(id, result);
                     }
                 } else {
-                    value.add(GenJsonNull.INSTANCE);
+                    queueManager.publish(id, GenJsonNull.INSTANCE);
                 }
             }
 
@@ -99,21 +104,16 @@ public class ActionManager {
                 value.add(GenJsonNull.INSTANCE);
             }
         });
-        // 将value的指针与查询ID绑定
-        idData.put(id, value);
-        service.execute(action);
-        return id;
+        return action;
     }
 
-    private Integer acceptScan(GenJsonObject element) throws IOException {
-        Integer id = element.hashCode();
-        GenJsonArray value = new GenJsonArray();
+    private Action acceptScan(GenJsonObject element, Integer id) throws IOException {
         Action action = new ScanAction(id, new ScanParam(element), new CompletionHandler<GenJsonElement, Boolean>() {
             @Override
             public void completed(GenJsonElement result, Boolean attachment) {
                 if (attachment) {
                     System.out.println(result);
-                    value.add(result);
+                    queueManager.publish(id, result);
                 }
             }
 
@@ -122,9 +122,7 @@ public class ActionManager {
 
             }
         });
-        idData.put(id, value);
-        service.execute(action);
-        return id;
+        return action;
     }
 
     private void acceptPrint(GenJsonElement element) {
@@ -162,7 +160,7 @@ public class ActionManager {
     public Map<String, GenJsonElement> getAll() {
         Map<String, GenJsonElement> resMap = new LinkedHashMap<>();
         for (Map.Entry<String, Integer> map : varIdMap.entrySet()) {
-            resMap.put(map.getKey(), idData.get(map.getValue()));
+            resMap.put(map.getKey(), queueManager.getAll(map.getValue()));
         }
         return resMap;
     }
@@ -170,7 +168,7 @@ public class ActionManager {
     public void clear() {
         // TODO: 2017/9/27 清空service 避免内存泄露
         varIdMap.clear();
-        idData.clear();
+        queueManager.clear();
     }
 
     public void close() {
