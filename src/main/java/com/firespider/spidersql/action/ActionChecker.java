@@ -2,6 +2,7 @@ package com.firespider.spidersql.action;
 
 import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonObject;
+import com.firespider.spidersql.lang.json.GenJsonPrimitive;
 
 /**
  * 所有动作语法的合法性检测均在该类中进行，需要打详细的错误日志
@@ -24,6 +25,7 @@ public class ActionChecker {
                 res = true;
                 break;
             case SAVE:
+                res = checkSave(element);
                 break;
         }
         return res;
@@ -41,6 +43,18 @@ public class ActionChecker {
     private boolean checkScan(GenJsonElement element) {
         if (element instanceof GenJsonObject) {
             if (((GenJsonObject) element).has("host") && ((GenJsonObject) element).has("port")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkSave(GenJsonElement element) {
+        if (element instanceof GenJsonObject) {
+            if (((GenJsonObject) element).has("path") && ((GenJsonObject) element).has("data")) {
+                if (!((GenJsonObject) element).has("type")) {
+                    ((GenJsonObject) element).add("type", new GenJsonPrimitive<>("local"));
+                }
                 return true;
             }
         }

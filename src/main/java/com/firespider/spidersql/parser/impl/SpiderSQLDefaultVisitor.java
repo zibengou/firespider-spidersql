@@ -112,6 +112,7 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
         } else if (ctx.C_VAR() != null) {
             // 针对属性值，遍历获取
             String[] props = ctx.C_VAR().getText().split("\\.");
+            // TODO: 2017/10/26 object与array取值模式 
             if (!params.containsKey(props[0]))
                 return GenJsonNull.INSTANCE;
             element = params.get(props[0]);

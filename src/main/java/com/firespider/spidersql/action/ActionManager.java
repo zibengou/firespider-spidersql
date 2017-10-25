@@ -1,10 +1,8 @@
 package com.firespider.spidersql.action;
 
+import com.firespider.spidersql.action.model.SaveParam;
 import com.firespider.spidersql.action.model.ScanParam;
-import com.firespider.spidersql.lang.json.GenJsonArray;
-import com.firespider.spidersql.lang.json.GenJsonElement;
-import com.firespider.spidersql.lang.json.GenJsonNull;
-import com.firespider.spidersql.lang.json.GenJsonObject;
+import com.firespider.spidersql.lang.json.*;
 import com.firespider.spidersql.action.model.GetParam;
 import com.firespider.spidersql.queue.QueueManager;
 
@@ -22,12 +20,15 @@ public class ActionManager {
     private final QueueManager queueManager;
     private final ActionChecker checker;
 
-    private final ExecutorService service;
+    private final int threadNum;
+
+    private ExecutorService service;
 
     public ActionManager(int threadNum) {
         this.service = Executors.newFixedThreadPool(threadNum);
         this.checker = new ActionChecker();
         this.queueManager = new QueueManager();
+        this.threadNum = threadNum;
     }
 
     public enum TYPE {
@@ -66,6 +67,7 @@ public class ActionManager {
                     acceptPrint(element);
                     break;
                 case SAVE:
+                    action = acceptSave((GenJsonObject) element, id);
                     break;
                 default:
                     return id;
@@ -129,6 +131,21 @@ public class ActionManager {
         System.out.println(element.toString());
     }
 
+    private Action acceptSave(GenJsonObject element, Integer id) {
+        Action action = new SaveAction(id, new SaveParam(element), new CompletionHandler<GenJsonElement, Boolean>() {
+            @Override
+            public void completed(GenJsonElement result, Boolean attachment) {
+                queueManager.publish(id, new GenJsonPrimitive<>(attachment));
+            }
+
+            @Override
+            public void failed(Throwable exc, Boolean attachment) {
+
+            }
+        });
+        return action;
+    }
+
     /***
      * 绑定变量名与动作ID
      * @param var
@@ -154,6 +171,8 @@ public class ActionManager {
             e.printStackTrace();
             service.shutdownNow();
             return false;
+        } finally {
+            this.service = Executors.newFixedThreadPool(this.threadNum);
         }
     }
 

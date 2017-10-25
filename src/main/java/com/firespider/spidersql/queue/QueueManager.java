@@ -3,8 +3,8 @@ package com.firespider.spidersql.queue;
 import com.firespider.spidersql.lang.json.GenJsonArray;
 import com.firespider.spidersql.lang.json.GenJsonElement;
 
-import java.util.Iterator;
-import java.util.List;
+import java.nio.channels.CompletionHandler;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -15,20 +15,24 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class QueueManager {
     private Map<Integer, ConcurrentLinkedQueue<GenJsonElement>> queueMap;
 
+    private Map<Integer, CompletionHandler<GenJsonElement, Boolean>> completionHandlerMap;
+
     public QueueManager() {
         this.queueMap = new ConcurrentHashMap<>();
+        this.completionHandlerMap = new LinkedHashMap<>();
     }
 
     public void regist(Integer id) {
-        queueMap.put(id, new ConcurrentLinkedQueue());
+        regist(id, null);
+    }
+
+    public void regist(Integer id, CompletionHandler<GenJsonElement, Boolean> handler) {
+        this.queueMap.put(id, new ConcurrentLinkedQueue<>());
+        this.completionHandlerMap.put(id, handler);
     }
 
     public void publish(Integer id, GenJsonElement data) {
-        queueMap.get(id).add(data);
-    }
-
-    public GenJsonElement consume(Integer id) {
-        return queueMap.get(id).poll();
+        this.queueMap.get(id).add(data);
     }
 
     public boolean exists(Integer id) {

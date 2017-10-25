@@ -43,33 +43,6 @@ public class ScanAction extends Action {
                         latch.countDown();
                     }
                 });
-//                client.handleScanPort(host, port, new CompletionHandler<Boolean, String[]>() {
-//                    @Override
-//                    public void completed(Boolean result, String[] attachment) {
-//                        GenJsonObject gen = new GenJsonObject();
-//                        gen.addPrimitive("ip", attachment[0]);
-//                        gen.addPrimitive("host", attachment[1]);
-//                        gen.addPrimitive("port", attachment[2]);
-//                        if (result) {
-//                            gen.addPrimitive("result", true);
-//                        } else {
-//                            gen.addPrimitive("result", false);
-//                        }
-//                        handler.completed(gen, attachment.hashCode());
-//                        latch.countDown();
-//                    }
-//
-//                    @Override
-//                    public void failed(Throwable exc, String[] attachment) {
-//                        GenJsonObject gen = new GenJsonObject();
-//                        gen.addPrimitive("ip", attachment[0]);
-//                        gen.addPrimitive("host", attachment[1]);
-//                        gen.addPrimitive("port", attachment[2]);
-//                        gen.addPrimitive("result", false);
-//                        handler.completed(gen, attachment.hashCode());
-//                        latch.countDown();
-//                    }
-//                });
             }
         }
         latch.await();
