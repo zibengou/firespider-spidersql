@@ -32,7 +32,7 @@ public class ActionManager {
     }
 
     public enum TYPE {
-        GET, SCAN, DESC, PRINT, SAVE;
+        GET, SCAN, DESC, PRINT, SAVE, VALUE;
     }
 
 
@@ -68,6 +68,9 @@ public class ActionManager {
                     break;
                 case SAVE:
                     action = acceptSave((GenJsonObject) element, id);
+                    break;
+                case VALUE:
+                    queueManager.publish(id, element);
                     break;
                 default:
                     return id;

@@ -6,7 +6,7 @@ import com.firespider.spidersql.lang.json.*;
 import com.firespider.spidersql.parser.SpiderSQLBaseVisitor;
 import com.firespider.spidersql.parser.SpiderSQLParser;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -45,6 +45,17 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     }
 
     @Override
+    public Gen visitDefaultPush(SpiderSQLParser.DefaultPushContext ctx) {
+        Gen source = visitVar(ctx.var(0));
+        if (ctx.mul_var() == null) {
+
+        } else {
+
+        }
+        return source;
+    }
+
+    @Override
     public Gen visitAssignGet(SpiderSQLParser.AssignGetContext ctx) {
         String var = ctx.C_VAR().getText();
         Gen res = visitGet(ctx.get());
@@ -61,6 +72,14 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     }
 
     @Override
+    public Gen visitAssignValue(SpiderSQLParser.AssignValueContext ctx) {
+        GenJsonElement element = visitValue(ctx.value());
+        Integer id = actionManager.accept(element, ActionManager.TYPE.VALUE);
+        actionManager.bind(ctx.C_VAR().getText(), id);
+        return new Gen(id);
+    }
+
+    @Override
     public Gen visitScan(SpiderSQLParser.ScanContext ctx) {
         GenJsonElement element = visitObj(ctx.obj());
         return new Gen(actionManager.accept(element, ActionManager.TYPE.SCAN));
@@ -73,15 +92,12 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
             res[0] = actionManager.accept(visitObj(ctx.obj()), ActionManager.TYPE.PRINT);
         } else if (ctx.C_VAR() != null) {
             String var = ctx.C_VAR().getText();
-            if (params.containsKey(var)) {
-                res[0] = actionManager.accept(params.get(var), ActionManager.TYPE.PRINT);
-            }
+            ArrayList<String> varList = new ArrayList<>(Arrays.asList(var.split("\\.")));
+            res[0] = actionManager.accept(parseVarElement(null, varList), ActionManager.TYPE.PRINT);
         } else {
             ctx.c_mul_var().C_VAR().forEach(var -> {
-                String v = var.getText();
-                if (params.containsKey(v)) {
-                    res[0] = actionManager.accept(params.get(v), ActionManager.TYPE.PRINT);
-                }
+                ArrayList<String> varList = new ArrayList<>(Arrays.asList(var.getText().split("\\.")));
+                res[0] = actionManager.accept(parseVarElement(null, varList), ActionManager.TYPE.PRINT);
             });
         }
         return new Gen(res[0]);
@@ -116,9 +132,7 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
             if (!params.containsKey(props[0]))
                 return GenJsonNull.INSTANCE;
             element = params.get(props[0]);
-            for (int i = 1; i < props.length; i++) {
-                element = ((GenJsonObject) element).get(props[i]);
-            }
+            element = parseVarElement(element, new ArrayList<>(Arrays.asList(props)));
         } else if (ctx.obj() != null) {
             element = visitObj(ctx.obj());
         } else if (ctx.array() != null) {
@@ -131,6 +145,31 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
             }
         }
         return element;
+    }
+
+    private GenJsonElement parseVarElement(GenJsonElement element, ArrayList<String> varList) {
+        if (varList.size() == 0) {
+            return element;
+        }
+        GenJsonElement res = null;
+        if (element == null) {
+            String root = varList.get(0);
+            varList.remove(0);
+            res = parseVarElement(this.params.get(root), new ArrayList<>(varList));
+        } else if (element instanceof GenJsonArray) {
+            res = new GenJsonArray();
+            Iterator<GenJsonElement> iterator = ((GenJsonArray) element).iterator();
+            while (iterator.hasNext()) {
+                ((GenJsonArray) res).add(parseVarElement(iterator.next(), new ArrayList<>(varList)));
+            }
+        } else if (element instanceof GenJsonObject) {
+            res = ((GenJsonObject) element).get(varList.get(0));
+            varList.remove(0);
+            res = parseVarElement(res, new ArrayList<>(varList));
+        } else {
+            return element;
+        }
+        return res;
     }
 
     @Override

@@ -27,6 +27,8 @@ public class ActionChecker {
             case SAVE:
                 res = checkSave(element);
                 break;
+            case VALUE:
+                res = true;
         }
         return res;
     }

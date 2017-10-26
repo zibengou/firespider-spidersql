@@ -2,8 +2,10 @@ package com.firespider.spidersql.queue;
 
 import com.firespider.spidersql.lang.json.GenJsonArray;
 import com.firespider.spidersql.lang.json.GenJsonElement;
+import com.firespider.spidersql.lang.json.GenJsonNull;
 
 import java.nio.channels.CompletionHandler;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,13 +41,26 @@ public class QueueManager {
         return queueMap.containsKey(id);
     }
 
-    public GenJsonArray getAll(Integer id) {
+    public GenJsonElement getAll(Integer id) {
         GenJsonArray array = new GenJsonArray();
-        queueMap.get(id).iterator().forEachRemaining(array::add);
-        return array;
+        Iterator iterator = queueMap.get(id).iterator();
+        int length = 0;
+        while (iterator.hasNext()) {
+            length++;
+            array.add(iterator.next());
+        }
+        if (length == 0) {
+            return GenJsonNull.INSTANCE;
+        } else if (length == 1) {
+            return array.get(0);
+        } else {
+            return array;
+        }
     }
 
     public void clear() {
         queueMap.forEach((k, v) -> v.clear());
+        queueMap.clear();
+        completionHandlerMap.clear();
     }
 }
