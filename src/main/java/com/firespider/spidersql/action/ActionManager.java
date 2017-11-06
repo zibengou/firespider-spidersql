@@ -8,13 +8,15 @@ import com.firespider.spidersql.queue.QueueManager;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class ActionManager {
     //变量与ID的映射关系，需要保序
     private final Map<String, Integer> varIdMap = new LinkedHashMap<>();
+
+    private final Map<Integer, Action> actionMap = new HashMap<>();
+
     //ID与数据结果映射关系，线程安全
 //    private final Map<Integer, GenJsonElement> idData = new ConcurrentHashMap<>();
     private final QueueManager queueManager;
@@ -35,7 +37,6 @@ public class ActionManager {
         GET, SCAN, DESC, PRINT, SAVE, VALUE;
     }
 
-
     /***
      * 接收并执行动作
      * @param element
@@ -44,14 +45,21 @@ public class ActionManager {
      */
     public Integer accept(GenJsonElement element, TYPE type) {
         Integer id = element.hashCode();
+        queueManager.regist(id);
+        Action action = accept(element, type, id);
+        actionMap.put(id, action);
+        return id;
+    }
+
+
+    public Action accept(GenJsonElement element, TYPE type, Integer id) {
         Action action = null;
-        if (queueManager.exists(id)) {
-            return id;
+        if (actionMap.containsKey(id)) {
+            return actionMap.get(id);
         }
         if (!checker.check(element, type)) {
-            return id;
+            return action;
         }
-        queueManager.regist(id);
         // TODO: 2017/9/27 完善剩余action内容
         try {
             switch (type) {
@@ -73,16 +81,13 @@ public class ActionManager {
                     queueManager.publish(id, element);
                     break;
                 default:
-                    return id;
+                    return action;
             }
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println(type + " init error!");
         }
-        if (action != null) {
-            service.execute(action);
-        }
-        return id;
+        return action;
     }
 
     private Action acceptGet(GenJsonObject element, Integer id) throws IOException {
@@ -158,6 +163,22 @@ public class ActionManager {
         varIdMap.put(var, id);
     }
 
+    public void regist(Integer id, Integer sourceId, CompletionHandler<GenJsonElement, Integer> handler) {
+        this.queueManager.regist(id, sourceId, handler);
+    }
+
+    public void execute(int timeout) {
+        if (actionMap == null || actionMap.size() == 0)
+            return;
+        actionMap.forEach((k, v) -> {
+            if (v != null) {
+                this.service.execute(v);
+            }
+        });
+        this.await(timeout);
+        actionMap.clear();
+    }
+
     /***
      * 等待线程池中任务全部执行完毕
      * @param timeout
@@ -185,6 +206,17 @@ public class ActionManager {
             resMap.put(map.getKey(), queueManager.getAll(map.getValue()));
         }
         return resMap;
+    }
+
+    public String getVar(Integer id) {
+        Iterator<Map.Entry<String, Integer>> iterator = varIdMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Integer> entry = iterator.next();
+            if (id == entry.getValue()) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 
     public void clear() {

@@ -1,7 +1,5 @@
 package com.firespider.spidersql.io.net;
 
-import com.sun.deploy.net.HttpResponse;
-
 import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
@@ -41,7 +39,9 @@ public class NetUtil {
         Socket socket = new Socket();
         SocketAddress remoteAddr = new InetSocketAddress(host, port);
         socket.connect(remoteAddr, timeout);
-        return socket.getInetAddress().getHostAddress();
+        String address = socket.getInetAddress().getHostAddress();
+        socket.close();
+        return address;
     }
 
     private static HttpURLConnection getConn(String path, Map<String, String> header) throws IOException {

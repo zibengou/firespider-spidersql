@@ -1,11 +1,13 @@
 package com.firespider.spidersql.parser.impl;
 
+import com.firespider.spidersql.action.Action;
 import com.firespider.spidersql.action.ActionManager;
 import com.firespider.spidersql.lang.Gen;
 import com.firespider.spidersql.lang.json.*;
 import com.firespider.spidersql.parser.SpiderSQLBaseVisitor;
 import com.firespider.spidersql.parser.SpiderSQLParser;
 
+import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -38,7 +40,8 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     @Override
     public Gen visitCombine_statement(SpiderSQLParser.Combine_statementContext ctx) {
         ctx.simple_statement().forEach(this::visitSimple_statement);
-        actionManager.await(100);
+        actionManager.execute(100);
+//        actionManager.await(100);
         params.putAll(actionManager.getAll());
         actionManager.clear();
         return new Gen();
@@ -47,10 +50,42 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     @Override
     public Gen visitDefaultPush(SpiderSQLParser.DefaultPushContext ctx) {
         Gen source = visitVar(ctx.var(0));
+//        SpiderSQLParser.VarContext varContext0 = ctx.var(0);
+//        Gen source = visitVar(varContext0);
+        String sourceVar = actionManager.getVar(source.getId());
         if (ctx.mul_var() == null) {
+            SpiderSQLParser.VarContext varContext1 = ctx.var(1);
+            if (varContext1.C_VAR() != null) {
+                String var = varContext1.C_VAR().getText();
+                Integer id = var.hashCode();
+                actionManager.bind(var, id);
+                actionManager.regist(id, source.getId(), new CompletionHandler<GenJsonElement, Integer>() {
+                    @Override
+                    public void completed(GenJsonElement result, Integer attachment) {
+                        Action action = actionManager.accept(result, ActionManager.TYPE.VALUE, id);
+                        if (action != null) {
+                            action.run();
+                        }
+                    }
+                    @Override
+                    public void failed(Throwable exc, Integer attachment) {
 
+                    }
+                });
+            } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignValueContext) {
+
+            } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignGetContext) {
+
+            } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignSaveContext) {
+
+            } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignScanContext) {
+
+            } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignDescContext) {
+
+            }
         } else {
-
+            SpiderSQLParser.Mul_varContext mulVarContext = ctx.mul_var();
+            mulVarContext.var().forEach(this::visitVar);
         }
         return source;
     }

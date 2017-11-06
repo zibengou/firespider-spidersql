@@ -43,7 +43,7 @@ public abstract class Action implements Runnable {
     }
 
     void finished() {
-        GenJsonElement finalElement = new GenJsonPrimitive<String>(id + "finish");
+        GenJsonElement finalElement = new GenJsonPrimitive<String>(id + FINISH_FLAG);
         this.handler.completed(finalElement, true);
     }
 }

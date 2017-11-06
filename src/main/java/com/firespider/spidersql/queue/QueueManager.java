@@ -5,9 +5,7 @@ import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonNull;
 
 import java.nio.channels.CompletionHandler;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -17,7 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class QueueManager {
     private Map<Integer, ConcurrentLinkedQueue<GenJsonElement>> queueMap;
 
-    private Map<Integer, CompletionHandler<GenJsonElement, Boolean>> completionHandlerMap;
+    private Map<Integer, List<CompletionHandler<GenJsonElement, Integer>>> completionHandlerMap;
 
     public QueueManager() {
         this.queueMap = new ConcurrentHashMap<>();
@@ -25,16 +23,26 @@ public class QueueManager {
     }
 
     public void regist(Integer id) {
-        regist(id, null);
+        regist(id, null, null);
     }
 
-    public void regist(Integer id, CompletionHandler<GenJsonElement, Boolean> handler) {
+    public void regist(Integer id, Integer sourceId, CompletionHandler<GenJsonElement, Integer> handler) {
         this.queueMap.put(id, new ConcurrentLinkedQueue<>());
-        this.completionHandlerMap.put(id, handler);
+        if (sourceId != null) {
+            if (this.completionHandlerMap.containsKey(sourceId)) {
+                this.completionHandlerMap.get(sourceId).add(handler);
+            } else {
+                this.completionHandlerMap.put(sourceId, Arrays.asList(handler));
+            }
+        }
     }
 
     public void publish(Integer id, GenJsonElement data) {
         this.queueMap.get(id).add(data);
+        List<CompletionHandler<GenJsonElement, Integer>> handler = this.completionHandlerMap.get(id);
+        if (handler != null) {
+            handler.forEach(exe -> exe.completed(data, id));
+        }
     }
 
     public boolean exists(Integer id) {
