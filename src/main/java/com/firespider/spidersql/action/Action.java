@@ -13,7 +13,7 @@ public abstract class Action implements Runnable {
     //ID 用于标识每一个动作，绑定结果数据
     protected Integer id;
 
-    private final static String FINISH_FLAG = ":finish";
+    public final static String FINISH_FLAG = ":finish";
 
     Param param;
 

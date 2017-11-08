@@ -4,6 +4,7 @@ import com.firespider.spidersql.action.model.SaveParam;
 import com.firespider.spidersql.action.model.ScanParam;
 import com.firespider.spidersql.lang.json.*;
 import com.firespider.spidersql.action.model.GetParam;
+import com.firespider.spidersql.queue.LocalQueueManager;
 import com.firespider.spidersql.queue.QueueManager;
 
 import java.io.IOException;
@@ -29,7 +30,7 @@ public class ActionManager {
     public ActionManager(int threadNum) {
         this.service = Executors.newFixedThreadPool(threadNum);
         this.checker = new ActionChecker();
-        this.queueManager = new QueueManager();
+        this.queueManager = new LocalQueueManager();
         this.threadNum = threadNum;
     }
 
@@ -45,7 +46,7 @@ public class ActionManager {
      */
     public Integer accept(GenJsonElement element, TYPE type) {
         Integer id = element.hashCode();
-        queueManager.regist(id);
+        queueManager.regist(id, null, null);
         Action action = accept(element, type, id);
         actionMap.put(id, action);
         return id;
@@ -64,21 +65,21 @@ public class ActionManager {
         try {
             switch (type) {
                 case GET:
-                    action = acceptGet((GenJsonObject) element, id);
+                    action = acceptGet(element.getAsObject(), id);
                     break;
                 case SCAN:
-                    action = acceptScan((GenJsonObject) element, id);
+                    action = acceptScan(element.getAsObject(), id);
                     break;
                 case DESC:
                     break;
                 case PRINT:
-                    acceptPrint(element);
+                    acceptPrint(element.getAsElement());
                     break;
                 case SAVE:
-                    action = acceptSave((GenJsonObject) element, id);
+                    action = acceptSave(element.getAsObject(), id);
                     break;
                 case VALUE:
-                    queueManager.publish(id, element);
+                    queueManager.publish(id, element.getAsElement());
                     break;
                 default:
                     return action;
@@ -88,6 +89,26 @@ public class ActionManager {
             System.out.println(type + " init error!");
         }
         return action;
+    }
+
+    public Integer acceptHandler(GenJsonElement element, TYPE type, Integer sourceId) {
+        Integer id = element.hashCode();
+        this.queueManager.regist(id, sourceId, new CompletionHandler<GenJsonElement, Integer>() {
+            @Override
+            public void completed(GenJsonElement result, Integer attachment) {
+                element.setJsonVarElement(result);
+                Action action = accept(element, type, id);
+                if (action != null) {
+                    action.run();
+                }
+            }
+
+            @Override
+            public void failed(Throwable exc, Integer attachment) {
+
+            }
+        });
+        return id;
     }
 
     private Action acceptGet(GenJsonObject element, Integer id) throws IOException {
@@ -163,9 +184,9 @@ public class ActionManager {
         varIdMap.put(var, id);
     }
 
-    public void regist(Integer id, Integer sourceId, CompletionHandler<GenJsonElement, Integer> handler) {
-        this.queueManager.regist(id, sourceId, handler);
-    }
+//    public void regist(Integer id, Integer sourceId, CompletionHandler<GenJsonElement, Integer> handler) {
+//        this.queueManager.regist(id, sourceId, handler);
+//    }
 
     public void execute(int timeout) {
         if (actionMap == null || actionMap.size() == 0)
@@ -173,6 +194,9 @@ public class ActionManager {
         actionMap.forEach((k, v) -> {
             if (v != null) {
                 this.service.execute(v);
+                this.service.execute(() -> {
+                    while (queueManager.consume(k)) ;
+                });
             }
         });
         this.await(timeout);

@@ -14,7 +14,7 @@ public class SaveParam extends Param {
     public SaveParam(GenJsonObject element) {
         this.path = element.get("path").getAsString();
         this.type = element.get("type").getAsString();
-        this.data = element.get("data");
+        this.data = element.get("data").getAsElement();
     }
 
     public String getPath() {

@@ -7,6 +7,7 @@ import com.firespider.spidersql.lang.json.GenJsonArray;
 import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonObject;
 import com.firespider.spidersql.action.model.GetParam;
+import com.firespider.spidersql.lang.json.GenJsonVar;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;

@@ -1,13 +1,12 @@
 package com.firespider.spidersql.parser.impl;
 
-import com.firespider.spidersql.action.Action;
 import com.firespider.spidersql.action.ActionManager;
 import com.firespider.spidersql.lang.Gen;
 import com.firespider.spidersql.lang.json.*;
 import com.firespider.spidersql.parser.SpiderSQLBaseVisitor;
 import com.firespider.spidersql.parser.SpiderSQLParser;
+import com.sun.deploy.util.StringUtils;
 
-import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,32 +51,26 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
         Gen source = visitVar(ctx.var(0));
 //        SpiderSQLParser.VarContext varContext0 = ctx.var(0);
 //        Gen source = visitVar(varContext0);
-        String sourceVar = actionManager.getVar(source.getId());
         if (ctx.mul_var() == null) {
             SpiderSQLParser.VarContext varContext1 = ctx.var(1);
             if (varContext1.C_VAR() != null) {
                 String var = varContext1.C_VAR().getText();
-                Integer id = var.hashCode();
+                GenJsonVar varElement = new GenJsonVar();
+//                varElement.setPropsList(new ArrayList<>(Arrays.asList(var.split("\\."))));
+                Integer id = varElement.hashCode();
                 actionManager.bind(var, id);
-                actionManager.regist(id, source.getId(), new CompletionHandler<GenJsonElement, Integer>() {
-                    @Override
-                    public void completed(GenJsonElement result, Integer attachment) {
-                        Action action = actionManager.accept(result, ActionManager.TYPE.VALUE, id);
-                        if (action != null) {
-                            action.run();
-                        }
-                    }
-                    @Override
-                    public void failed(Throwable exc, Integer attachment) {
-
-                    }
-                });
+                actionManager.acceptHandler(varElement, ActionManager.TYPE.VALUE, source.getId());
             } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignValueContext) {
 
             } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignGetContext) {
 
             } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignSaveContext) {
-
+                SpiderSQLParser.AssignSaveContext saveContext = (SpiderSQLParser.AssignSaveContext) varContext1.assign_statement();
+                String var = saveContext.C_VAR().getText();
+                SpiderSQLParser.ObjContext objContext = saveContext.save().obj();
+                GenJsonElement element = visitObj(objContext);
+                actionManager.bind(var, element.hashCode());
+                actionManager.acceptHandler(element, ActionManager.TYPE.SAVE, source.getId());
             } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignScanContext) {
 
             } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignDescContext) {
@@ -127,12 +120,10 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
             res[0] = actionManager.accept(visitObj(ctx.obj()), ActionManager.TYPE.PRINT);
         } else if (ctx.C_VAR() != null) {
             String var = ctx.C_VAR().getText();
-            ArrayList<String> varList = new ArrayList<>(Arrays.asList(var.split("\\.")));
-            res[0] = actionManager.accept(parseVarElement(null, varList), ActionManager.TYPE.PRINT);
+            res[0] = actionManager.accept(parseVarElement(var), ActionManager.TYPE.PRINT);
         } else {
             ctx.c_mul_var().C_VAR().forEach(var -> {
-                ArrayList<String> varList = new ArrayList<>(Arrays.asList(var.getText().split("\\.")));
-                res[0] = actionManager.accept(parseVarElement(null, varList), ActionManager.TYPE.PRINT);
+                res[0] = actionManager.accept(parseVarElement(var.getText()), ActionManager.TYPE.PRINT);
             });
         }
         return new Gen(res[0]);
@@ -161,13 +152,7 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
         } else if (ctx.DOUBLE() != null) {
             element = new GenJsonPrimitive<>(Double.parseDouble(ctx.DOUBLE().getText()));
         } else if (ctx.C_VAR() != null) {
-            // 针对属性值，遍历获取
-            String[] props = ctx.C_VAR().getText().split("\\.");
-            // TODO: 2017/10/26 object与array取值模式 
-            if (!params.containsKey(props[0]))
-                return GenJsonNull.INSTANCE;
-            element = params.get(props[0]);
-            element = parseVarElement(element, new ArrayList<>(Arrays.asList(props)));
+            element = parseVarElement(ctx.C_VAR().getText());
         } else if (ctx.obj() != null) {
             element = visitObj(ctx.obj());
         } else if (ctx.array() != null) {
@@ -180,31 +165,6 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
             }
         }
         return element;
-    }
-
-    private GenJsonElement parseVarElement(GenJsonElement element, ArrayList<String> varList) {
-        if (varList.size() == 0) {
-            return element;
-        }
-        GenJsonElement res = null;
-        if (element == null) {
-            String root = varList.get(0);
-            varList.remove(0);
-            res = parseVarElement(this.params.get(root), new ArrayList<>(varList));
-        } else if (element instanceof GenJsonArray) {
-            res = new GenJsonArray();
-            Iterator<GenJsonElement> iterator = ((GenJsonArray) element).iterator();
-            while (iterator.hasNext()) {
-                ((GenJsonArray) res).add(parseVarElement(iterator.next(), new ArrayList<>(varList)));
-            }
-        } else if (element instanceof GenJsonObject) {
-            res = ((GenJsonObject) element).get(varList.get(0));
-            varList.remove(0);
-            res = parseVarElement(res, new ArrayList<>(varList));
-        } else {
-            return element;
-        }
-        return res;
     }
 
     @Override
@@ -228,6 +188,20 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
         GenJsonArray array = new GenJsonArray();
         ctx.value().forEach(value -> array.add(visitValue(value)));
         return array;
+    }
+
+    private GenJsonElement parseVarElement(String props) {
+        ArrayList<String> propList = new ArrayList<>(Arrays.asList(props.split("\\.")));
+        GenJsonVar element = new GenJsonVar();
+        // TODO: 2017/10/26 object与array取值模式
+        if (params.containsKey(propList.get(0))) {
+            GenJsonElement ele = params.get(propList.get(0));
+            element.setElement(ele);
+        }
+        // 删除根节点变量
+        propList.remove(0);
+        element.setProps(StringUtils.join(propList, "\\."));
+        return element;
     }
 
 }

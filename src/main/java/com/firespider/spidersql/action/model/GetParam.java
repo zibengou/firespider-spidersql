@@ -2,6 +2,7 @@ package com.firespider.spidersql.action.model;
 
 import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonObject;
+import com.firespider.spidersql.lang.json.GenJsonVar;
 
 import java.util.Map;
 
@@ -13,11 +14,11 @@ public class GetParam extends Param {
     private String charset;
 
     // TODO: 2017/9/28 定义正则解析模型 
-    private Map<String,String[]> regrexMap;
-    private Map<String,String> header;
+    private Map<String, String[]> regrexMap;
+    private Map<String, String> header;
 
-    public GetParam(GenJsonObject element){
-        this.url = element.get("url");
+    public GetParam(GenJsonObject element) {
+        this.url = element.get("url").getAsElement();
     }
 
     public String getCharset() {
