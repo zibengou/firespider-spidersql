@@ -40,7 +40,6 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     public Gen visitCombine_statement(SpiderSQLParser.Combine_statementContext ctx) {
         ctx.simple_statement().forEach(this::visitSimple_statement);
         actionManager.execute(100);
-//        actionManager.await(100);
         params.putAll(actionManager.getAll());
         actionManager.clear();
         return new Gen();
@@ -49,33 +48,50 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     @Override
     public Gen visitDefaultPush(SpiderSQLParser.DefaultPushContext ctx) {
         Gen source = visitVar(ctx.var(0));
-//        SpiderSQLParser.VarContext varContext0 = ctx.var(0);
-//        Gen source = visitVar(varContext0);
         if (ctx.mul_var() == null) {
+            GenJsonElement varElement;
+            String var;
+            ActionManager.TYPE type;
             SpiderSQLParser.VarContext varContext1 = ctx.var(1);
-            if (varContext1.C_VAR() != null) {
-                String var = varContext1.C_VAR().getText();
-                GenJsonVar varElement = new GenJsonVar();
-//                varElement.setPropsList(new ArrayList<>(Arrays.asList(var.split("\\."))));
-                Integer id = varElement.hashCode();
-                actionManager.bind(var, id);
-                actionManager.acceptHandler(varElement, ActionManager.TYPE.VALUE, source.getId());
-            } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignValueContext) {
 
+            if (varContext1.C_VAR() != null) {
+                var = varContext1.C_VAR().getText();
+                varElement = new GenJsonVar();
+                type = ActionManager.TYPE.VALUE;
             } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignGetContext) {
+                SpiderSQLParser.AssignGetContext getContext = (SpiderSQLParser.AssignGetContext) varContext1.assign_statement();
+                SpiderSQLParser.ObjContext objContext = getContext.get().obj();
+                var = getContext.C_VAR().getText();
+                varElement = visitObj(objContext);
+                type = ActionManager.TYPE.GET;
 
             } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignSaveContext) {
                 SpiderSQLParser.AssignSaveContext saveContext = (SpiderSQLParser.AssignSaveContext) varContext1.assign_statement();
-                String var = saveContext.C_VAR().getText();
                 SpiderSQLParser.ObjContext objContext = saveContext.save().obj();
-                GenJsonElement element = visitObj(objContext);
-                actionManager.bind(var, element.hashCode());
-                actionManager.acceptHandler(element, ActionManager.TYPE.SAVE, source.getId());
+                var = saveContext.C_VAR().getText();
+                varElement = visitObj(objContext);
+                type = ActionManager.TYPE.SAVE;
             } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignScanContext) {
-
+                SpiderSQLParser.AssignScanContext scanContext = ((SpiderSQLParser.AssignScanContext) varContext1.assign_statement());
+                SpiderSQLParser.ObjContext objContext = scanContext.scan().obj();
+                var = scanContext.C_VAR().getText();
+                varElement = visitObj(objContext);
+                type = ActionManager.TYPE.SCAN;
             } else if (varContext1.assign_statement() instanceof SpiderSQLParser.AssignDescContext) {
-
+                SpiderSQLParser.AssignDescContext descContext = (SpiderSQLParser.AssignDescContext) varContext1.assign_statement();
+                SpiderSQLParser.ObjContext objContext = descContext.desc().obj();
+                var = descContext.C_VAR().getText();
+                varElement = visitObj(objContext);
+                type = ActionManager.TYPE.DESC;
+            } else {    // AssignValueContext
+                SpiderSQLParser.AssignValueContext valueContext = (SpiderSQLParser.AssignValueContext) varContext1.assign_statement();
+                SpiderSQLParser.ObjContext objContext = valueContext.value().obj();
+                var = valueContext.C_VAR().getText();
+                varElement = visitObj(objContext);
+                type = ActionManager.TYPE.VALUE;
             }
+            actionManager.bind(var, varElement.hashCode());
+            actionManager.acceptHandler(varElement, type, source.getId());
         } else {
             SpiderSQLParser.Mul_varContext mulVarContext = ctx.mul_var();
             mulVarContext.var().forEach(this::visitVar);

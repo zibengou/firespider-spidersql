@@ -34,12 +34,18 @@ public class ActionChecker {
     }
 
     private boolean checkGet(GenJsonElement element) {
+        boolean res = false;
         if (element instanceof GenJsonObject) {
             if (((GenJsonObject) element).has("url")) {
-                return true;
+                res = true;
+            }
+            if (((GenJsonObject) element).has("filter")) {
+                if (((GenJsonObject) element).get("filter") instanceof GenJsonPrimitive) {
+                    res = true;
+                }
             }
         }
-        return false;
+        return res;
     }
 
     private boolean checkScan(GenJsonElement element) {

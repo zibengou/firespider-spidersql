@@ -1,6 +1,7 @@
 package com.firespider.spidersql.aio.file;
 
 import com.firespider.spidersql.lang.json.GenJsonElement;
+import com.firespider.spidersql.utils.Utils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -10,86 +11,79 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by stone on 2017/10/21.
  */
 public class DefaultStorageManager implements IStorageManager {
 
-    private final String path;
+    private static final Map<Integer, AsynchronousFileChannel> channelMap = new ConcurrentHashMap<>();
 
-    private final SAVE_TYPE type;
+    private static final Map<Integer, Integer> positionMap = new ConcurrentHashMap<>();
 
-    private final CompletionHandler<GenJsonElement, Boolean> handler;
+    private static final int TIMEOUT = 1000;
 
-    private final Map<Integer, AsynchronousFileChannel> channelMap;
-
-    private enum SAVE_TYPE {
-        LOCAL, REDIS;
-    }
-
-    public DefaultStorageManager(String path, String type, CompletionHandler handler) {
-        this.channelMap = new ConcurrentHashMap<>();
-        this.path = path;
-        switch (type.toLowerCase()) {
-            case "local":
-                this.type = SAVE_TYPE.LOCAL;
-                break;
-            case "redis":
-                this.type = SAVE_TYPE.REDIS;
-                break;
-            default:
-                this.type = SAVE_TYPE.LOCAL;
-        }
-        this.handler = handler;
-    }
-
-    public DefaultStorageManager(String path, CompletionHandler handler) {
-        this(path, "local", handler);
-    }
-
-    public DefaultStorageManager(CompletionHandler handler) {
-        this("", handler);
-    }
+    public static final IStorageManager INSTANCE = new DefaultStorageManager();
 
     @Override
-    public void save(Integer id, GenJsonElement data) throws IOException {
-        switch (this.type) {
-            case LOCAL:
-                doSaveLocal(id, data);
+    public void save(Integer id, GenJsonElement data, String path, String type, CompletionHandler<GenJsonElement, Boolean> handler) throws IOException {
+        switch (type.toLowerCase()) {
+            case "local":
+                doSaveLocal(id, data, path, handler);
                 break;
-            case REDIS:
-                doSaveRedis(id, data);
+            case "redis":
+                doSaveRedis(id, data, path, handler);
                 break;
             default:
-                doSaveLocal(id, data);
+                doSaveLocal(id, data, path, handler);
         }
     }
 
-    private void doSaveLocal(Integer id, GenJsonElement data) throws IOException {
+    private synchronized void doSaveLocal(Integer id, GenJsonElement data, String path, CompletionHandler<GenJsonElement, Boolean> handler) throws IOException {
         if (!this.channelMap.containsKey(id)) {
-            this.channelMap.put(id, initChannel(id, this.path));
+            this.channelMap.put(id, initChannel(id, path));
         }
-        byte[] bytes = data.toString().getBytes();
+        if (!this.positionMap.containsKey(id)) {
+            this.positionMap.put(id, 0);
+        }
+        int position = this.positionMap.get(id);
+        byte[] bytes = (data.toString() + "\n").getBytes();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        this.channelMap.get(id).write(buffer, 0, data, new CompletionHandler<Integer, GenJsonElement>() {
-            @Override
-            public void completed(Integer result, GenJsonElement attachment) {
-                handler.completed(attachment, true);
-            }
+        int nextPosition = position + bytes.length;
+        this.positionMap.put(id, nextPosition);
+        try {
+            this.channelMap.get(id).write(buffer, position).get(TIMEOUT, TimeUnit.MILLISECONDS);
+            handler.completed(data, true);
+        } catch (Exception e) {
+            handler.failed(e, false);
+        }
 
-            @Override
-            public void failed(Throwable exc, GenJsonElement attachment) {
-                handler.completed(attachment, false);
-            }
-        });
     }
 
-    private void doSaveRedis(Integer id, GenJsonElement data) {
+    private synchronized void doSaveRedis(Integer id, GenJsonElement data, String path, CompletionHandler<GenJsonElement, Boolean> handler) {
 
     }
 
     private AsynchronousFileChannel initChannel(Integer id, String path) throws IOException {
-        return AsynchronousFileChannel.open(Paths.get(String.valueOf(id), path), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        String filePath;
+        if (Utils.isEmpty(path)) {
+            filePath = String.valueOf(id);
+        } else {
+            filePath = path;
+        }
+        return AsynchronousFileChannel.open(Utils.getPath(filePath), StandardOpenOption.WRITE);
+    }
+
+    public void close() {
+        positionMap.clear();
+        channelMap.forEach((k, v) -> {
+            try {
+                v.close();
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
+            }
+        });
+        channelMap.clear();
     }
 }

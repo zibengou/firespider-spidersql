@@ -2,8 +2,8 @@ package com.firespider.spidersql.action.model;
 
 import com.firespider.spidersql.lang.json.GenJsonElement;
 import com.firespider.spidersql.lang.json.GenJsonObject;
-import com.firespider.spidersql.lang.json.GenJsonVar;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -11,14 +11,26 @@ import java.util.Map;
  */
 public class GetParam extends Param {
     private GenJsonElement url;
+    private GenJsonObject parse;
     private String charset;
 
-    // TODO: 2017/9/28 定义正则解析模型 
-    private Map<String, String[]> regrexMap;
     private Map<String, String> header;
 
     public GetParam(GenJsonObject element) {
         this.url = element.get("url").getAsElement();
+        if (element.has("filter")) {
+            this.parse = element.get("filter").getAsObject();
+        } else {
+            this.parse = new GenJsonObject();
+        }
+        if (element.has("header")) {
+            this.header = new LinkedHashMap<>();
+            element.get("header").getAsObject().entrySet().forEach(e -> {
+                String key = e.getKey();
+                String value = e.getValue().getAsString();
+                this.header.put(key, value);
+            });
+        }
     }
 
     public String getCharset() {
@@ -43,5 +55,13 @@ public class GetParam extends Param {
 
     public void setHeader(Map<String, String> header) {
         this.header = header;
+    }
+
+    public GenJsonObject getParse() {
+        return parse;
+    }
+
+    public void setParse(GenJsonObject parse) {
+        this.parse = parse;
     }
 }

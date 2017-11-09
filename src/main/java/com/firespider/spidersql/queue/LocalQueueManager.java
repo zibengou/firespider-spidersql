@@ -30,26 +30,26 @@ public class LocalQueueManager implements QueueManager {
             if (this.completionHandlerMap.containsKey(sourceId)) {
                 this.completionHandlerMap.get(sourceId).add(handler);
             } else {
-                this.completionHandlerMap.put(sourceId, Arrays.asList(handler));
+                this.completionHandlerMap.put(sourceId, new ArrayList<>(Arrays.asList(handler)));
             }
         }
     }
 
     public boolean publish(Integer id, GenJsonElement data) {
-        return this.queueMap.get(id).offer(data);
+        boolean res = this.queueMap.get(id).offer(data);
+        return res;
     }
 
     public boolean consume(Integer id) {
         if (!this.completionHandlerMap.containsKey(id) || this.completionHandlerMap.get(id) == null) {
             return false;
         }
-        boolean finished = true;
+        boolean hasNext = true;
         GenJsonElement data = this.queueMap.get(id).poll();
         if (data != null) {
-            String finishFlag = "\"" + id + Action.FINISH_FLAG + "\"";
-            String dataStr = data.toString();
-            if (finishFlag.equals(dataStr)) {
-                finished = false;
+            String finishFlag = id + Action.FINISH_FLAG;
+            if (data instanceof GenJsonPrimitive && finishFlag.equals(data.getAsString())) {
+                hasNext = false;
             } else {
                 List<CompletionHandler<GenJsonElement, Integer>> handler = this.completionHandlerMap.get(id);
                 if (handler != null) {
@@ -57,7 +57,7 @@ public class LocalQueueManager implements QueueManager {
                 }
             }
         }
-        return finished;
+        return hasNext;
     }
 
     public boolean exists(Integer id) {
@@ -83,6 +83,9 @@ public class LocalQueueManager implements QueueManager {
 
     public void clear() {
         queueMap.forEach((k, v) -> v.clear());
+        completionHandlerMap.forEach((k, v) -> {
+            if (v != null) v.clear();
+        });
         queueMap.clear();
         completionHandlerMap.clear();
     }

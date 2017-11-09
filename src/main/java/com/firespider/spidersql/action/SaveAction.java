@@ -17,14 +17,13 @@ public class SaveAction extends Action {
 
     SaveAction(Integer id, SaveParam param, CompletionHandler<GenJsonElement, Boolean> handler) {
         super(id, param, handler);
-        String type = ((SaveParam) this.param).getType();
-        String path = ((SaveParam) this.param).getPath();
-        this.storageManager = new DefaultStorageManager(path, type, handler);
     }
 
     @Override
     void handle() throws IOException, InterruptedException {
         GenJsonElement data = ((SaveParam) this.param).getData();
-        this.storageManager.save(this.id, data);
+        String type = ((SaveParam) this.param).getType();
+        String path = ((SaveParam) this.param).getPath();
+        DefaultStorageManager.INSTANCE.save(this.id, data, path, type, this.handler);
     }
 }

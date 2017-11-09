@@ -2,6 +2,7 @@ package com.firespider.spidersql.action;
 
 import com.firespider.spidersql.action.model.SaveParam;
 import com.firespider.spidersql.action.model.ScanParam;
+import com.firespider.spidersql.aio.file.DefaultStorageManager;
 import com.firespider.spidersql.lang.json.*;
 import com.firespider.spidersql.action.model.GetParam;
 import com.firespider.spidersql.queue.LocalQueueManager;
@@ -143,7 +144,6 @@ public class ActionManager {
             @Override
             public void completed(GenJsonElement result, Boolean attachment) {
                 if (attachment) {
-                    System.out.println(result);
                     queueManager.publish(id, result);
                 }
             }
@@ -244,9 +244,9 @@ public class ActionManager {
     }
 
     public void clear() {
-        // TODO: 2017/9/27 清空service 避免内存泄露
         varIdMap.clear();
         queueManager.clear();
+        DefaultStorageManager.INSTANCE.close();
     }
 
     public void close() {
