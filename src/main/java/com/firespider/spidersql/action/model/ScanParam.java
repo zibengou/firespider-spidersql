@@ -1,7 +1,6 @@
 package com.firespider.spidersql.action.model;
 
-import com.firespider.spidersql.lang.json.GenJsonElement;
-import com.firespider.spidersql.lang.json.GenJsonObject;
+import com.firespider.spidersql.lang.GenObject;
 
 /**
  * Created by xiaotong.shi on 2017/9/28.
@@ -10,7 +9,7 @@ public class ScanParam extends Param{
     String host;
     String port;
 
-    public ScanParam(GenJsonObject element){
+    public ScanParam(GenObject element){
         this.host = element.get("host").getAsString();
         this.port = element.get("port").getAsString();
     }

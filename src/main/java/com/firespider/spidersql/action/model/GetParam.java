@@ -1,7 +1,7 @@
 package com.firespider.spidersql.action.model;
 
-import com.firespider.spidersql.lang.json.GenJsonElement;
-import com.firespider.spidersql.lang.json.GenJsonObject;
+import com.firespider.spidersql.lang.GenElement;
+import com.firespider.spidersql.lang.GenObject;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -10,18 +10,18 @@ import java.util.Map;
  * Created by xiaotong.shi on 2017/9/27.
  */
 public class GetParam extends Param {
-    private GenJsonElement url;
-    private GenJsonObject parse;
+    private GenElement url;
+    private GenObject parse;
     private String charset;
 
     private Map<String, String> header;
 
-    public GetParam(GenJsonObject element) {
+    public GetParam(GenObject element) {
         this.url = element.get("url").getAsElement();
         if (element.has("filter")) {
             this.parse = element.get("filter").getAsObject();
         } else {
-            this.parse = new GenJsonObject();
+            this.parse = new GenObject();
         }
         if (element.has("header")) {
             this.header = new LinkedHashMap<>();
@@ -41,11 +41,11 @@ public class GetParam extends Param {
         this.charset = charset;
     }
 
-    public GenJsonElement getUrl() {
+    public GenElement getUrl() {
         return url;
     }
 
-    public void setUrl(GenJsonElement url) {
+    public void setUrl(GenElement url) {
         this.url = url;
     }
 
@@ -57,11 +57,11 @@ public class GetParam extends Param {
         this.header = header;
     }
 
-    public GenJsonObject getParse() {
+    public GenObject getParse() {
         return parse;
     }
 
-    public void setParse(GenJsonObject parse) {
+    public void setParse(GenObject parse) {
         this.parse = parse;
     }
 }

@@ -1,71 +1,73 @@
-package com.firespider.spidersql.lang.json;
+package com.firespider.spidersql.lang;
 
-import com.firespider.spidersql.lang.Gen;
+public abstract class GenElement extends Gen {
+    public abstract GenElement deepCopy();
 
-import java.util.ArrayList;
-
-public abstract class GenJsonElement extends Gen {
-    abstract GenJsonElement deepCopy();
+    public abstract void setJsonVarElement(GenElement element);
 
     public boolean isArray() {
-        return this instanceof GenJsonArray;
+        return this instanceof GenArray;
     }
 
     public boolean isObject() {
-        return this instanceof GenJsonObject;
+        return this instanceof GenObject;
     }
 
     public boolean isPrimitive() {
-        return this instanceof GenJsonPrimitive;
+        return this instanceof GenPrimitive;
     }
 
     public boolean isJsonVar() {
-        return this instanceof GenJsonVar;
+        return this instanceof GenVar;
+    }
+
+    public boolean isScript() {
+        return this instanceof GenScript;
     }
 
     public boolean isNull() {
-        return this instanceof GenJsonNull;
+        return this instanceof GenNull;
     }
 
-    public GenJsonArray getAsArray() {
+    public GenArray getAsArray() {
         if (this.isArray()) {
-            return (GenJsonArray) this;
+            return (GenArray) this;
         } else {
             throw new IllegalStateException("This is not a JSON Array.");
         }
     }
 
-    public GenJsonObject getAsObject() {
+    public GenObject getAsObject() {
         if (this.isObject()) {
-            return (GenJsonObject) this;
+            return (GenObject) this;
         } else {
             throw new IllegalStateException("This is not a JSON Object.");
         }
     }
 
-    public GenJsonPrimitive getAsPrimitive() {
+    public GenPrimitive getAsPrimitive() {
         if (this.isPrimitive()) {
-            return (GenJsonPrimitive) this;
+            return (GenPrimitive) this;
         } else {
             throw new IllegalStateException("This is not a JSON Primitive.");
         }
     }
 
-    public GenJsonVar getAsVar() {
+    public GenVar getAsVar() {
         if (this.isJsonVar()) {
-            return (GenJsonVar) this;
+            return (GenVar) this;
         } else {
             throw new IllegalStateException("This is not a JSON Var.");
         }
     }
 
-    public GenJsonElement getAsElement() {
+    public GenElement getAsElement() {
         return this;
     }
 
-    public GenJsonNull getAsNull() {
+    public GenNull getAsNull() {
         if (this.isNull()) {
-            return (GenJsonNull) this;
+            return (GenNull) this;
         } else {
             throw new IllegalStateException("This is not a JSON Null.");
         }
@@ -89,15 +91,5 @@ public abstract class GenJsonElement extends Gen {
 
     public Object getValue() {
         throw new UnsupportedOperationException(this.getClass().getSimpleName());
-    }
-
-    public void setJsonVarElement(GenJsonElement element) {
-        if (this.isJsonVar()) {
-            this.getAsVar().setElement(element);
-        } else if (this.isObject()) {
-            ((GenJsonObject) this).entrySet().forEach(v -> v.getValue().setJsonVarElement(element));
-        } else if (this.isArray()) {
-            ((GenJsonArray) this).iterator().forEachRemaining(e -> e.setJsonVarElement(element));
-        }
     }
 }

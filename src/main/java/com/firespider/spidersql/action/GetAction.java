@@ -3,8 +3,10 @@ package com.firespider.spidersql.action;
 import com.firespider.spidersql.io.net.Format;
 import com.firespider.spidersql.io.net.HttpAsyncClient;
 import com.firespider.spidersql.io.net.Response;
-import com.firespider.spidersql.lang.json.*;
+import com.firespider.spidersql.lang.*;
 import com.firespider.spidersql.action.model.GetParam;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import us.codecraft.xsoup.Xsoup;
@@ -31,7 +33,7 @@ public class GetAction extends Action {
     }
 
 
-    public GetAction(Integer id, GetParam param, CompletionHandler<GenJsonElement, Boolean> handler) throws IOException {
+    public GetAction(Integer id, GetParam param, CompletionHandler<GenElement, Boolean> handler) throws IOException {
         super(id, param, handler);
         client = new HttpAsyncClient(thread);
     }
@@ -56,10 +58,10 @@ public class GetAction extends Action {
      * @param element
      * @return
      */
-    private List<String> parseUrl(GenJsonElement element) {
+    private List<String> parseUrl(GenElement element) {
         List<String> urlList = new ArrayList<>();
-        if (element instanceof GenJsonArray) {
-            Iterator<GenJsonElement> iterator = element.getAsArray().iterator();
+        if (element instanceof GenArray) {
+            Iterator<GenElement> iterator = element.getAsArray().iterator();
             while (iterator.hasNext()) {
                 String url = iterator.next().getAsString();
                 urlList.addAll(Format.parseSingleUrl(url));
@@ -70,11 +72,11 @@ public class GetAction extends Action {
         return urlList;
     }
 
-    private GenJsonObject parseBody(String body, Set<Map.Entry> parseMap) {
-        GenJsonObject res = new GenJsonObject();
+    private GenObject parseBody(String body, Set<Map.Entry> parseMap) {
+        GenObject res = new GenObject();
         RESPONSE_TYPE type = parseResponseType(body);
         Object preBody = doParseBodyPre(body, type);
-        for (Map.Entry<String, GenJsonElement> entry : parseMap) {
+        for (Map.Entry<String, GenElement> entry : parseMap) {
             String key = entry.getKey();
             String regrex = entry.getValue().getAsString();
             res.add(key, doParsebody(regrex, preBody, type));
@@ -99,7 +101,7 @@ public class GetAction extends Action {
             case HTML:
                 return Jsoup.parse(body);
             case JSON:
-                return body;
+                return JsonPath.parse(body);
             case STRING:
                 return body;
             default:
@@ -107,47 +109,59 @@ public class GetAction extends Action {
         }
     }
 
-    private GenJsonElement doParsebody(String regrex, Object body, RESPONSE_TYPE type) {
-        List<String> parseResList = null;
+    private GenElement doParsebody(String regrex, Object body, RESPONSE_TYPE type) {
+        List<Object> parseResList = null;
         switch (type) {
             case HTML:
                 parseResList = doParseHtmlBody(regrex, (Document) body);
                 break;
             case JSON:
-                parseResList = doParseJsonBody(regrex, (String) body);
+                parseResList = doParseJsonBody(regrex, (DocumentContext) body);
                 break;
             case STRING:
                 parseResList = doParseStringBody(regrex, (String) body);
                 break;
         }
         if (parseResList == null || parseResList.size() == 0) {
-            return GenJsonNull.INSTANCE;
+            return GenNull.INSTANCE;
         } else if (parseResList.size() == 1) {
-            return new GenJsonPrimitive<>(parseResList.get(0));
+            return new GenPrimitive<>(parseResList.get(0));
         } else {
-            GenJsonArray array = new GenJsonArray();
-            parseResList.forEach(l -> array.add(new GenJsonPrimitive<>(l)));
+            GenArray array = new GenArray();
+            parseResList.forEach(l -> array.add(new GenPrimitive<>(l)));
             return array;
         }
     }
 
-    private List<String> doParseHtmlBody(String regrex, Document doc) {
-        List<String> resList = new ArrayList<>();
+    private List<Object> doParseHtmlBody(String regrex, Document doc) {
+        List<Object> resList = new ArrayList<>();
         try {
-            resList = Xsoup.compile(regrex).evaluate(doc).list();
+            for (String l : Xsoup.compile(regrex).evaluate(doc).list()) {
+                resList.add(l);
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
         return resList;
     }
 
-    private List<String> doParseJsonBody(String regrex, String body) {
-        List<String> resList = new ArrayList<>();
+    private List<Object> doParseJsonBody(String regrex, DocumentContext ctx) {
+        List<Object> resList = new ArrayList<>();
+        try {
+            Object res = ctx.read(regrex);
+            if (res instanceof List) {
+                resList.addAll((Collection<? extends String>) res);
+            } else {
+                resList.add(res);
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
         return resList;
     }
 
-    private List<String> doParseStringBody(String regrex, String body) {
-        List<String> resList = new ArrayList<>();
+    private List<Object> doParseStringBody(String regrex, String body) {
+        List<Object> resList = new ArrayList<>();
         return resList;
     }
 
@@ -162,7 +176,7 @@ public class GetAction extends Action {
         CountDownLatch latch = new CountDownLatch(urlList.size());
         urlList.forEach(url -> {
             client.handleGet(url, new CompletionHandler<Response, String>() {
-                GenJsonObject obj = new GenJsonObject();
+                GenObject obj = new GenObject();
 
                 @Override
                 public void completed(Response result, String attachment) {

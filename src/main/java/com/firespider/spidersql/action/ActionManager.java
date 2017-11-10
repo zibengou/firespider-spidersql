@@ -3,7 +3,7 @@ package com.firespider.spidersql.action;
 import com.firespider.spidersql.action.model.SaveParam;
 import com.firespider.spidersql.action.model.ScanParam;
 import com.firespider.spidersql.aio.file.DefaultStorageManager;
-import com.firespider.spidersql.lang.json.*;
+import com.firespider.spidersql.lang.*;
 import com.firespider.spidersql.action.model.GetParam;
 import com.firespider.spidersql.queue.LocalQueueManager;
 import com.firespider.spidersql.queue.QueueManager;
@@ -20,7 +20,7 @@ public class ActionManager {
     private final Map<Integer, Action> actionMap = new HashMap<>();
 
     //ID与数据结果映射关系，线程安全
-//    private final Map<Integer, GenJsonElement> idData = new ConcurrentHashMap<>();
+//    private final Map<Integer, GenElement> idData = new ConcurrentHashMap<>();
     private final QueueManager queueManager;
     private final ActionChecker checker;
 
@@ -45,7 +45,7 @@ public class ActionManager {
      * @param type
      * @return
      */
-    public Integer accept(GenJsonElement element, TYPE type) {
+    public Integer accept(GenElement element, TYPE type) {
         Integer id = element.hashCode();
         queueManager.regist(id, null, null);
         Action action = accept(element, type, id);
@@ -54,7 +54,7 @@ public class ActionManager {
     }
 
 
-    public Action accept(GenJsonElement element, TYPE type, Integer id) {
+    public Action accept(GenElement element, TYPE type, Integer id) {
         Action action = null;
         if (actionMap.containsKey(id)) {
             return actionMap.get(id);
@@ -92,13 +92,14 @@ public class ActionManager {
         return action;
     }
 
-    public Integer acceptHandler(GenJsonElement element, TYPE type, Integer sourceId) {
+    public Integer acceptHandler(GenElement element, TYPE type, Integer sourceId) {
         Integer id = element.hashCode();
-        this.queueManager.regist(id, sourceId, new CompletionHandler<GenJsonElement, Integer>() {
+        this.queueManager.regist(id, sourceId, new CompletionHandler<GenElement, Integer>() {
             @Override
-            public void completed(GenJsonElement result, Integer attachment) {
-                element.setJsonVarElement(result);
-                Action action = accept(element, type, id);
+            public void completed(GenElement result, Integer attachment) {
+                GenElement newElement = element.deepCopy();
+                newElement.setJsonVarElement(result);
+                Action action = accept(newElement, type, id);
                 if (action != null) {
                     action.run();
                 }
@@ -112,37 +113,37 @@ public class ActionManager {
         return id;
     }
 
-    private Action acceptGet(GenJsonObject element, Integer id) throws IOException {
+    private Action acceptGet(GenObject element, Integer id) throws IOException {
 
-        GenJsonArray value = new GenJsonArray();
+        GenArray value = new GenArray();
         // TODO: 2017/9/27 确认是否会出现回调地狱
         // 在handler中对value赋值，该块堆内存会在另外N份线程中做add操作
-        Action action = new GetAction(id, new GetParam(element), new CompletionHandler<GenJsonElement, Boolean>() {
+        Action action = new GetAction(id, new GetParam(element), new CompletionHandler<GenElement, Boolean>() {
             @Override
-            public void completed(GenJsonElement result, Boolean attachment) {
+            public void completed(GenElement result, Boolean attachment) {
                 if (attachment) {
-                    if (result instanceof GenJsonArray) {
+                    if (result instanceof GenArray) {
                         result.getAsArray().iterator().forEachRemaining(ele -> queueManager.publish(id, ele));
                     } else {
                         queueManager.publish(id, result);
                     }
                 } else {
-                    queueManager.publish(id, GenJsonNull.INSTANCE);
+                    queueManager.publish(id, GenNull.INSTANCE);
                 }
             }
 
             @Override
             public void failed(Throwable exc, Boolean attachment) {
-                value.add(GenJsonNull.INSTANCE);
+                value.add(GenNull.INSTANCE);
             }
         });
         return action;
     }
 
-    private Action acceptScan(GenJsonObject element, Integer id) throws IOException {
-        Action action = new ScanAction(id, new ScanParam(element), new CompletionHandler<GenJsonElement, Boolean>() {
+    private Action acceptScan(GenObject element, Integer id) throws IOException {
+        Action action = new ScanAction(id, new ScanParam(element), new CompletionHandler<GenElement, Boolean>() {
             @Override
-            public void completed(GenJsonElement result, Boolean attachment) {
+            public void completed(GenElement result, Boolean attachment) {
                 if (attachment) {
                     queueManager.publish(id, result);
                 }
@@ -156,15 +157,15 @@ public class ActionManager {
         return action;
     }
 
-    private void acceptPrint(GenJsonElement element) {
+    private void acceptPrint(GenElement element) {
         System.out.println(element.toString());
     }
 
-    private Action acceptSave(GenJsonObject element, Integer id) {
-        Action action = new SaveAction(id, new SaveParam(element), new CompletionHandler<GenJsonElement, Boolean>() {
+    private Action acceptSave(GenObject element, Integer id) {
+        Action action = new SaveAction(id, new SaveParam(element), new CompletionHandler<GenElement, Boolean>() {
             @Override
-            public void completed(GenJsonElement result, Boolean attachment) {
-                queueManager.publish(id, new GenJsonPrimitive<>(attachment));
+            public void completed(GenElement result, Boolean attachment) {
+                queueManager.publish(id, new GenPrimitive<>(attachment));
             }
 
             @Override
@@ -184,7 +185,7 @@ public class ActionManager {
         varIdMap.put(var, id);
     }
 
-//    public void regist(Integer id, Integer sourceId, CompletionHandler<GenJsonElement, Integer> handler) {
+//    public void regist(Integer id, Integer sourceId, CompletionHandler<GenElement, Integer> handler) {
 //        this.queueManager.regist(id, sourceId, handler);
 //    }
 
@@ -224,8 +225,8 @@ public class ActionManager {
         }
     }
 
-    public Map<String, GenJsonElement> getAll() {
-        Map<String, GenJsonElement> resMap = new LinkedHashMap<>();
+    public Map<String, GenElement> getAll() {
+        Map<String, GenElement> resMap = new LinkedHashMap<>();
         for (Map.Entry<String, Integer> map : varIdMap.entrySet()) {
             resMap.put(map.getKey(), queueManager.getAll(map.getValue()));
         }

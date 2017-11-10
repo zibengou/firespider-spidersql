@@ -1,55 +1,55 @@
-package com.firespider.spidersql.lang.json;
+package com.firespider.spidersql.lang;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class GenJsonArray extends GenJsonElement {
-    private final List<GenJsonElement> elements;
+public class GenArray extends GenElement {
+    private final List<GenElement> elements;
 
 
     //确保线程安全
-    public GenJsonArray() {
+    public GenArray() {
         this.elements = new CopyOnWriteArrayList<>();
     }
 
     @Override
-    GenJsonArray deepCopy() {
-        GenJsonArray result = new GenJsonArray();
-        for (GenJsonElement element : elements) {
+    public GenArray deepCopy() {
+        GenArray result = new GenArray();
+        for (GenElement element : elements) {
             result.add(element.deepCopy());
         }
         return result;
     }
 
     public <T> void add(T value) {
-        if (value instanceof GenJsonElement) {
-            elements.add((GenJsonElement) value);
+        if (value instanceof GenElement) {
+            elements.add((GenElement) value);
         } else if (value == null) {
-            elements.add(GenJsonNull.INSTANCE);
+            elements.add(GenNull.INSTANCE);
         } else {
-            GenJsonPrimitive<T> element = new GenJsonPrimitive<>(value);
+            GenPrimitive<T> element = new GenPrimitive<>(value);
             elements.add(element);
         }
     }
 
-    public void addAll(GenJsonArray array) {
+    public void addAll(GenArray array) {
         elements.addAll(array.elements);
     }
 
-    public Iterator<GenJsonElement> iterator() {
+    public Iterator<GenElement> iterator() {
         return elements.iterator();
     }
 
-    public GenJsonElement get(int i) {
+    public GenElement get(int i) {
         return elements.get(i);
     }
 
-    public GenJsonElement remove(int index) {
+    public GenElement remove(int index) {
         return elements.remove(index);
     }
 
-    public boolean contains(GenJsonElement element) {
+    public boolean contains(GenElement element) {
         return elements.contains(element);
     }
 
@@ -59,7 +59,7 @@ public class GenJsonArray extends GenJsonElement {
 
     @Override
     public boolean equals(Object o) {
-        return (o == this) || (o instanceof GenJsonArray && ((GenJsonArray) o).elements.equals(elements));
+        return (o == this) || (o instanceof GenArray && ((GenArray) o).elements.equals(elements));
     }
 
     @Override
@@ -70,10 +70,15 @@ public class GenJsonArray extends GenJsonElement {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("[\n");
-        for (GenJsonElement element : elements) {
+        for (GenElement element : elements) {
             sb.append(element.toString()).append(",\n");
         }
         sb.deleteCharAt(sb.length() - 2).append("]");
         return sb.toString();
+    }
+
+    @Override
+    public void setJsonVarElement(GenElement element) {
+        this.iterator().forEachRemaining(e -> e.setJsonVarElement(element));
     }
 }

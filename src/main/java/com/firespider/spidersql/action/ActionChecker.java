@@ -1,8 +1,8 @@
 package com.firespider.spidersql.action;
 
-import com.firespider.spidersql.lang.json.GenJsonElement;
-import com.firespider.spidersql.lang.json.GenJsonObject;
-import com.firespider.spidersql.lang.json.GenJsonPrimitive;
+import com.firespider.spidersql.lang.GenElement;
+import com.firespider.spidersql.lang.GenObject;
+import com.firespider.spidersql.lang.GenPrimitive;
 
 /**
  * 所有动作语法的合法性检测均在该类中进行，需要打详细的错误日志
@@ -10,7 +10,7 @@ import com.firespider.spidersql.lang.json.GenJsonPrimitive;
  */
 public class ActionChecker {
 
-    public boolean check(GenJsonElement element, ActionManager.TYPE type) {
+    public boolean check(GenElement element, ActionManager.TYPE type) {
         boolean res = false;
         switch (type) {
             case GET:
@@ -33,14 +33,14 @@ public class ActionChecker {
         return res;
     }
 
-    private boolean checkGet(GenJsonElement element) {
+    private boolean checkGet(GenElement element) {
         boolean res = false;
-        if (element instanceof GenJsonObject) {
-            if (((GenJsonObject) element).has("url")) {
+        if (element instanceof GenObject) {
+            if (((GenObject) element).has("url")) {
                 res = true;
             }
-            if (((GenJsonObject) element).has("filter")) {
-                if (((GenJsonObject) element).get("filter") instanceof GenJsonPrimitive) {
+            if (((GenObject) element).has("filter")) {
+                if (((GenObject) element).get("filter") instanceof GenPrimitive) {
                     res = true;
                 }
             }
@@ -48,20 +48,20 @@ public class ActionChecker {
         return res;
     }
 
-    private boolean checkScan(GenJsonElement element) {
-        if (element instanceof GenJsonObject) {
-            if (((GenJsonObject) element).has("host") && ((GenJsonObject) element).has("port")) {
+    private boolean checkScan(GenElement element) {
+        if (element instanceof GenObject) {
+            if (((GenObject) element).has("host") && ((GenObject) element).has("port")) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean checkSave(GenJsonElement element) {
-        if (element instanceof GenJsonObject) {
-            if (((GenJsonObject) element).has("path") && ((GenJsonObject) element).has("data")) {
-                if (!((GenJsonObject) element).has("type")) {
-                    ((GenJsonObject) element).add("type", new GenJsonPrimitive<>("local"));
+    private boolean checkSave(GenElement element) {
+        if (element instanceof GenObject) {
+            if (((GenObject) element).has("path") && ((GenObject) element).has("data")) {
+                if (!((GenObject) element).has("type")) {
+                    ((GenObject) element).add("type", new GenPrimitive<>("local"));
                 }
                 return true;
             }

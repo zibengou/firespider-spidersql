@@ -1,7 +1,7 @@
 package com.firespider.spidersql.action;
 
 import com.firespider.spidersql.action.model.SaveParam;
-import com.firespider.spidersql.lang.json.GenJsonElement;
+import com.firespider.spidersql.lang.GenElement;
 import com.firespider.spidersql.aio.file.DefaultStorageManager;
 import com.firespider.spidersql.aio.file.IStorageManager;
 
@@ -15,13 +15,13 @@ public class SaveAction extends Action {
 
     private IStorageManager storageManager;
 
-    SaveAction(Integer id, SaveParam param, CompletionHandler<GenJsonElement, Boolean> handler) {
+    SaveAction(Integer id, SaveParam param, CompletionHandler<GenElement, Boolean> handler) {
         super(id, param, handler);
     }
 
     @Override
     void handle() throws IOException, InterruptedException {
-        GenJsonElement data = ((SaveParam) this.param).getData();
+        GenElement data = ((SaveParam) this.param).getData();
         String type = ((SaveParam) this.param).getType();
         String path = ((SaveParam) this.param).getPath();
         DefaultStorageManager.INSTANCE.save(this.id, data, path, type, this.handler);

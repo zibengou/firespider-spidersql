@@ -1,9 +1,8 @@
 package com.firespider.spidersql.action;
 
 import com.firespider.spidersql.action.model.Param;
-import com.firespider.spidersql.lang.json.GenJsonElement;
-import com.firespider.spidersql.lang.json.GenJsonNull;
-import com.firespider.spidersql.lang.json.GenJsonPrimitive;
+import com.firespider.spidersql.lang.GenElement;
+import com.firespider.spidersql.lang.GenPrimitive;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
@@ -18,9 +17,9 @@ public abstract class Action implements Runnable {
     Param param;
 
     //回调方法
-    CompletionHandler<GenJsonElement, Boolean> handler;
+    CompletionHandler<GenElement, Boolean> handler;
 
-    Action(Integer id, Param param, CompletionHandler<GenJsonElement, Boolean> handler) {
+    Action(Integer id, Param param, CompletionHandler<GenElement, Boolean> handler) {
         this.id = id;
         this.param = param;
         this.handler = handler;
@@ -43,7 +42,7 @@ public abstract class Action implements Runnable {
     }
 
     void finished() {
-        GenJsonElement finalElement = new GenJsonPrimitive<String>(id + FINISH_FLAG);
+        GenElement finalElement = new GenPrimitive<String>(id + FINISH_FLAG);
         this.handler.completed(finalElement, true);
     }
 }

@@ -1,6 +1,6 @@
 package com.firespider.spidersql.queue;
 
-import com.firespider.spidersql.lang.json.GenJsonElement;
+import com.firespider.spidersql.lang.GenElement;
 
 import java.nio.channels.CompletionHandler;
 
@@ -9,13 +9,13 @@ import java.nio.channels.CompletionHandler;
  */
 public interface QueueManager {
 
-    void regist(Integer id, Integer sourceId, CompletionHandler<GenJsonElement, Integer> handler);
+    void regist(Integer id, Integer sourceId, CompletionHandler<GenElement, Integer> handler);
 
-    boolean publish(Integer id, GenJsonElement data);
+    boolean publish(Integer id, GenElement data);
 
     boolean consume(Integer id);
 
-    GenJsonElement getAll(Integer id);
+    GenElement getAll(Integer id);
 
     boolean exists(Integer id);
 

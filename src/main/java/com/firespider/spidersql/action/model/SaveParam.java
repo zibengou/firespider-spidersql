@@ -1,17 +1,17 @@
 package com.firespider.spidersql.action.model;
 
-import com.firespider.spidersql.lang.json.GenJsonElement;
-import com.firespider.spidersql.lang.json.GenJsonObject;
+import com.firespider.spidersql.lang.GenElement;
+import com.firespider.spidersql.lang.GenObject;
 
 /**
  * Created by xiaotong.shi on 2017/9/28.
  */
 public class SaveParam extends Param {
     private String path;
-    private GenJsonElement data;
+    private GenElement data;
     private String type;
 
-    public SaveParam(GenJsonObject element) {
+    public SaveParam(GenObject element) {
         this.path = element.get("path").getAsString();
         this.type = element.get("type").getAsString();
         this.data = element.get("data").getAsElement();
@@ -25,11 +25,11 @@ public class SaveParam extends Param {
         this.path = path;
     }
 
-    public GenJsonElement getData() {
+    public GenElement getData() {
         return data;
     }
 
-    public void setData(GenJsonElement data) {
+    public void setData(GenElement data) {
         this.data = data;
     }
 

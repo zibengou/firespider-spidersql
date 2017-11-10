@@ -1,13 +1,12 @@
 package com.firespider.spidersql.aio.file;
 
-import com.firespider.spidersql.lang.json.GenJsonElement;
+import com.firespider.spidersql.lang.GenElement;
 import com.firespider.spidersql.utils.Utils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.CompletionHandler;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +26,7 @@ public class DefaultStorageManager implements IStorageManager {
     public static final IStorageManager INSTANCE = new DefaultStorageManager();
 
     @Override
-    public void save(Integer id, GenJsonElement data, String path, String type, CompletionHandler<GenJsonElement, Boolean> handler) throws IOException {
+    public void save(Integer id, GenElement data, String path, String type, CompletionHandler<GenElement, Boolean> handler) throws IOException {
         switch (type.toLowerCase()) {
             case "local":
                 doSaveLocal(id, data, path, handler);
@@ -40,7 +39,7 @@ public class DefaultStorageManager implements IStorageManager {
         }
     }
 
-    private synchronized void doSaveLocal(Integer id, GenJsonElement data, String path, CompletionHandler<GenJsonElement, Boolean> handler) throws IOException {
+    private synchronized void doSaveLocal(Integer id, GenElement data, String path, CompletionHandler<GenElement, Boolean> handler) throws IOException {
         if (!this.channelMap.containsKey(id)) {
             this.channelMap.put(id, initChannel(id, path));
         }
@@ -61,7 +60,7 @@ public class DefaultStorageManager implements IStorageManager {
 
     }
 
-    private synchronized void doSaveRedis(Integer id, GenJsonElement data, String path, CompletionHandler<GenJsonElement, Boolean> handler) {
+    private synchronized void doSaveRedis(Integer id, GenElement data, String path, CompletionHandler<GenElement, Boolean> handler) {
 
     }
 

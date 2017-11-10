@@ -23,6 +23,11 @@
             <artifactId>xsoup</artifactId>
             <version>0.3.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+            <version>2.3.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -40,7 +45,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.firespider.spidersql.Main</mainClass>
+                            <mainClass>com.firespider.spidersql.ConsoleMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

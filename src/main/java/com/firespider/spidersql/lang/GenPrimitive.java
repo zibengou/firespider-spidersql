@@ -1,9 +1,9 @@
-package com.firespider.spidersql.lang.json;
+package com.firespider.spidersql.lang;
 
-public class GenJsonPrimitive<T> extends GenJsonElement {
+public class GenPrimitive<T> extends GenElement {
     private T value;
 
-    public GenJsonPrimitive(T value) {
+    public GenPrimitive(T value) {
         this.value = value;
     }
 
@@ -12,8 +12,20 @@ public class GenJsonPrimitive<T> extends GenJsonElement {
     }
 
     @Override
-    GenJsonElement deepCopy() {
+    public GenElement deepCopy() {
         return this;
+    }
+
+    public boolean isInt() {
+        return value instanceof Integer;
+    }
+
+    public boolean isDobule() {
+        return value instanceof Double;
+    }
+
+    public boolean isString() {
+        return value instanceof String;
     }
 
     public String getAsString() {
@@ -55,5 +67,10 @@ public class GenJsonPrimitive<T> extends GenJsonElement {
         } else {
             return value.toString();
         }
+    }
+
+    @Override
+    public void setJsonVarElement(GenElement element) {
+
     }
 }

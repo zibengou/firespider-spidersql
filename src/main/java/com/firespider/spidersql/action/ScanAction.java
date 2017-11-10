@@ -2,14 +2,13 @@ package com.firespider.spidersql.action;
 
 import com.firespider.spidersql.action.model.ScanParam;
 import com.firespider.spidersql.io.net.HttpAsyncClient;
-import com.firespider.spidersql.lang.json.GenJsonElement;
-import com.firespider.spidersql.lang.json.GenJsonObject;
+import com.firespider.spidersql.lang.GenElement;
+import com.firespider.spidersql.lang.GenObject;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Created by xiaotong.shi on 2017/9/14.
@@ -19,7 +18,7 @@ public class ScanAction extends Action {
 
     private final static int thread = 100;
 
-    public ScanAction(Integer id, ScanParam param, CompletionHandler<GenJsonElement, Boolean> handler) throws IOException {
+    public ScanAction(Integer id, ScanParam param, CompletionHandler<GenElement, Boolean> handler) throws IOException {
         super(id, param, handler);
         this.client = new HttpAsyncClient(thread);
     }
@@ -51,7 +50,7 @@ public class ScanAction extends Action {
 
     private void enableHandle(String host, String port, String ip, boolean result) {
         try {
-            GenJsonObject gen = new GenJsonObject();
+            GenObject gen = new GenObject();
             gen.addPrimitive("ip", ip);
             gen.addPrimitive("host", host);
             gen.addPrimitive("port", port);

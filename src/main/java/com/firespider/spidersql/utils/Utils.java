@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Created by xiaotong.shi on 2017/11/8.
@@ -26,5 +28,17 @@ public class Utils {
             System.err.println(e.getMessage() + " create file error");
         }
         return path;
+    }
+
+    public static String join(Collection var0, String var1) {
+        StringBuffer var2 = new StringBuffer();
+
+        for(Iterator var3 = var0.iterator(); var3.hasNext(); var2.append((String)var3.next())) {
+            if(var2.length() != 0) {
+                var2.append(var1);
+            }
+        }
+
+        return var2.toString();
     }
 }

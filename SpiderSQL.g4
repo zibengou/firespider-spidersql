@@ -63,6 +63,7 @@ value
    | INT
    | DOUBLE
    | C_VAR
+   | value (SYMBOL value)+
    | obj
    | array
    | 'true'
@@ -81,6 +82,7 @@ PRINT_STR       :   P R I N T;
 PARALLEL        :   ';';
 SERIAL          :   '|';
 ASSIGN          :   ':';
+SYMBOL          :   '+' | '-' | '*' | '/';
 C_VAR           :   ID+ ('.' ID+)*;
 
 STRING          :   '"' (ESC | ~ ["\\])* '"';

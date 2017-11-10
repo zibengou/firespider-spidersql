@@ -1,6 +1,6 @@
 package com.firespider.spidersql.aio.file;
 
-import com.firespider.spidersql.lang.json.GenJsonElement;
+import com.firespider.spidersql.lang.GenElement;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
@@ -10,7 +10,7 @@ import java.nio.channels.CompletionHandler;
  */
 public interface IStorageManager {
 
-    void save(Integer id, GenJsonElement data, String path, String type, CompletionHandler<GenJsonElement, Boolean> handler) throws IOException;
+    void save(Integer id, GenElement data, String path, String type, CompletionHandler<GenElement, Boolean> handler) throws IOException;
 
     void close();
 }
