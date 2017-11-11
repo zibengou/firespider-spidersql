@@ -1,27 +1,35 @@
 package com.firespider.spidersql;
 
 import com.firespider.spidersql.utils.Utils;
+import jline.console.ConsoleReader;
+import jline.console.completer.ArgumentCompleter;
+import jline.console.completer.FileNameCompleter;
+import jline.console.completer.StringsCompleter;
 
-import java.util.Scanner;
+import java.io.IOException;
 
 public class ConsoleMain {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws IOException {
         // TODO: 2017/11/10 Sql语法格式化
         // TODO: 2017/11/10 readme文档整理
         printContent();
         handleInput();
     }
 
-    private static void handleInput() throws InterruptedException {
-        Scanner sc = new Scanner(System.in);
-        printFlag();
+    private static void handleInput() throws IOException {
+        ConsoleReader reader = new ConsoleReader();
+        ConsoleCompleter consoleCompleter = new ConsoleCompleter();
+        StringsCompleter stringsCompleter = new StringsCompleter("print", "get", "save", "scan", "desc");
+        reader.addCompleter(new ArgumentCompleter(consoleCompleter, stringsCompleter));
+        reader.readLine();
+//        printFlag();
         while (true) {
-            String in = sc.nextLine();
+            String in = reader.readLine("SpiderSQL> ");
             if ("exit".equals(in)) {
                 break;
             } else {
                 executeSql(in);
-                printFlag();
+//                printFlag();
             }
         }
 
