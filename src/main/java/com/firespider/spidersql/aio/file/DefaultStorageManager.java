@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by stone on 2017/10/21.
+ * 默认存储管理模块
  */
 public class DefaultStorageManager implements IStorageManager {
 
@@ -39,20 +39,24 @@ public class DefaultStorageManager implements IStorageManager {
         }
     }
 
+    /***
+     * 本地存储模式
+     * 存储不会成为瓶颈，加锁保证数据有序
+     */
     private synchronized void doSaveLocal(Integer id, GenElement data, String path, CompletionHandler<GenElement, Boolean> handler) throws IOException {
-        if (!this.channelMap.containsKey(id)) {
-            this.channelMap.put(id, initChannel(id, path));
+        if (!channelMap.containsKey(id)) {
+            channelMap.put(id, initChannel(id, path));
         }
-        if (!this.positionMap.containsKey(id)) {
-            this.positionMap.put(id, 0);
+        if (!positionMap.containsKey(id)) {
+            positionMap.put(id, 0);
         }
-        int position = this.positionMap.get(id);
+        int position = positionMap.get(id);
         byte[] bytes = (data.toString() + "\n").getBytes();
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         int nextPosition = position + bytes.length;
-        this.positionMap.put(id, nextPosition);
+        positionMap.put(id, nextPosition);
         try {
-            this.channelMap.get(id).write(buffer, position).get(TIMEOUT, TimeUnit.MILLISECONDS);
+            channelMap.get(id).write(buffer, position).get(TIMEOUT, TimeUnit.MILLISECONDS);
             handler.completed(data, true);
         } catch (Exception e) {
             handler.failed(e, false);
@@ -64,6 +68,13 @@ public class DefaultStorageManager implements IStorageManager {
 
     }
 
+    /***
+     * 初始化AIO通道
+     * @param id
+     * @param path
+     * @return
+     * @throws IOException
+     */
     private AsynchronousFileChannel initChannel(Integer id, String path) throws IOException {
         String filePath;
         if (Utils.isEmpty(path)) {

@@ -72,6 +72,10 @@ public class GetAction extends Action {
         return urlList;
     }
 
+    /***
+     * 解析Body
+     * 解析HTML 解析JSON 解析STRING
+     */
     private GenObject parseBody(String body, Set<Map.Entry> parseMap) {
         GenObject res = new GenObject();
         RESPONSE_TYPE type = parseResponseType(body);
@@ -168,7 +172,6 @@ public class GetAction extends Action {
 
     /***
      * 请求数据
-     * todo 解析返回数据
      */
     void handle() throws IOException, InterruptedException {
         List<String> urlList = parse((GetParam) param);

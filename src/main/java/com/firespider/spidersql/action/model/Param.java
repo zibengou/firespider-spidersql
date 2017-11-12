@@ -1,7 +1,7 @@
 package com.firespider.spidersql.action.model;
 
 /**
- * Created by xiaotong.shi on 2017/9/28.
+ * 操作基本参数模型
  */
 public abstract class Param {
     private int timeout;

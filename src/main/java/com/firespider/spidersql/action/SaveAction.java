@@ -3,7 +3,6 @@ package com.firespider.spidersql.action;
 import com.firespider.spidersql.action.model.SaveParam;
 import com.firespider.spidersql.lang.GenElement;
 import com.firespider.spidersql.aio.file.DefaultStorageManager;
-import com.firespider.spidersql.aio.file.IStorageManager;
 
 import java.io.IOException;
 import java.nio.channels.CompletionHandler;
@@ -12,8 +11,6 @@ import java.nio.channels.CompletionHandler;
  * Created by xiaotong.shi on 2017/9/14.
  */
 public class SaveAction extends Action {
-
-    private IStorageManager storageManager;
 
     SaveAction(Integer id, SaveParam param, CompletionHandler<GenElement, Boolean> handler) {
         super(id, param, handler);

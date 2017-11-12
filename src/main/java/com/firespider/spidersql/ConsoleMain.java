@@ -2,14 +2,13 @@ package com.firespider.spidersql;
 
 import com.firespider.spidersql.utils.Utils;
 import jline.console.ConsoleReader;
-import jline.console.completer.ArgumentCompleter;
 
 import java.io.IOException;
 
 public class ConsoleMain {
     public static void main(String[] args) throws IOException {
-        // TODO: 2017/11/10 Sql语法格式化
         // TODO: 2017/11/10 readme文档整理
+        // TODO: 2017/11/12 save支持无赋值动作 
         printContent();
         handleInput();
     }

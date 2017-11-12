@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by stone on 2017/10/21.
+ * 语法解析模块
  */
 public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
 

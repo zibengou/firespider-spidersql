@@ -86,8 +86,4 @@ public class NetUtil {
         response.setBody(body);
         return response;
     }
-
-    public static void main(String[] args) throws IOException {
-        System.out.println(get("https://www.baidu.com"));
-    }
 }

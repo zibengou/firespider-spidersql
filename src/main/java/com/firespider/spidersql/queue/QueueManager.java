@@ -5,7 +5,8 @@ import com.firespider.spidersql.lang.GenElement;
 import java.nio.channels.CompletionHandler;
 
 /**
- * Created by xiaotong.shi on 2017/11/7.
+ * 队列管理模块
+ * todo 支持redis队列
  */
 public interface QueueManager {
 

@@ -14,13 +14,13 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class ActionManager {
-    //变量与ID的映射关系，需要保序
+    //变量与ID的映射关系，保序
     private final Map<String, Integer> varIdMap = new LinkedHashMap<>();
 
+    //预执行操作字典
     private final Map<Integer, Action> actionMap = new HashMap<>();
 
-    //ID与数据结果映射关系，线程安全
-//    private final Map<Integer, GenElement> idData = new ConcurrentHashMap<>();
+
     private final QueueManager queueManager;
     private final ActionChecker checker;
 
@@ -40,9 +40,8 @@ public class ActionManager {
     }
 
     /***
-     * 接收并执行动作
-     * @param element
-     * @param type
+     * 生成预执行方法
+     * 队列注册时，回调方法为空
      * @return
      */
     public Integer accept(GenElement element, TYPE type) {
@@ -53,7 +52,13 @@ public class ActionManager {
         return id;
     }
 
-
+    /***
+     * 根据参数生成预操作对象
+     * @param element
+     * @param type
+     * @param id
+     * @return
+     */
     public Action accept(GenElement element, TYPE type, Integer id) {
         Action action = null;
         if (actionMap.containsKey(id)) {
@@ -92,6 +97,10 @@ public class ActionManager {
         return action;
     }
 
+    /***
+     * PUSH操作生成的预执行方法
+     * 队列注册回调方法与触发ID
+     */
     public Integer acceptHandler(GenElement element, TYPE type, Integer sourceId) {
         Integer id = element.hashCode();
         this.queueManager.regist(id, sourceId, new CompletionHandler<GenElement, Integer>() {
@@ -113,11 +122,17 @@ public class ActionManager {
         return id;
     }
 
+    /***
+     * 获取网页预执行方法
+     * @param element
+     * @param id
+     * @return
+     * @throws IOException
+     */
     private Action acceptGet(GenObject element, Integer id) throws IOException {
 
         GenArray value = new GenArray();
         // TODO: 2017/9/27 确认是否会出现回调地狱
-        // 在handler中对value赋值，该块堆内存会在另外N份线程中做add操作
         Action action = new GetAction(id, new GetParam(element), new CompletionHandler<GenElement, Boolean>() {
             @Override
             public void completed(GenElement result, Boolean attachment) {
@@ -140,6 +155,13 @@ public class ActionManager {
         return action;
     }
 
+    /***
+     * 端口扫描预执行方法
+     * @param element
+     * @param id
+     * @return
+     * @throws IOException
+     */
     private Action acceptScan(GenObject element, Integer id) throws IOException {
         Action action = new ScanAction(id, new ScanParam(element), new CompletionHandler<GenElement, Boolean>() {
             @Override
@@ -157,11 +179,22 @@ public class ActionManager {
         return action;
     }
 
+    /***
+     * 文本打印预执行方法
+     * @param element
+     */
     private void acceptPrint(GenElement element) {
         removeFinishFlag(element);
         System.out.println(element.toString());
     }
 
+    /***
+     * 数据存储预执行方法
+     * todo 多媒体文件存储
+     * @param element
+     * @param id
+     * @return
+     */
     private Action acceptSave(GenObject element, Integer id) {
         removeFinishFlag(element.get("data"));
         Action action = new SaveAction(id, new SaveParam(element), new CompletionHandler<GenElement, Boolean>() {
@@ -178,6 +211,10 @@ public class ActionManager {
         return action;
     }
 
+    /***
+     * 清除 action 结束符
+     * @param element
+     */
     private void removeFinishFlag(GenElement element) {
         if (element instanceof GenArray && element.getAsArray().size() > 0) {
             int last = element.getAsArray().size() - 1;
@@ -206,10 +243,10 @@ public class ActionManager {
         varIdMap.put(var, id);
     }
 
-//    public void regist(Integer id, Integer sourceId, CompletionHandler<GenElement, Integer> handler) {
-//        this.queueManager.regist(id, sourceId, handler);
-//    }
-
+    /***
+     * 执行操作并阻塞
+     * @param timeout
+     */
     public void execute(int timeout) {
         if (actionMap == null || actionMap.size() == 0)
             return;
@@ -246,6 +283,10 @@ public class ActionManager {
         }
     }
 
+    /***
+     * 获取参数结果集
+     * @return
+     */
     public Map<String, GenElement> getAll() {
         Map<String, GenElement> resMap = new LinkedHashMap<>();
         for (Map.Entry<String, Integer> map : varIdMap.entrySet()) {

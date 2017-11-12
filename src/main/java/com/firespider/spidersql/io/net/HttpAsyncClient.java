@@ -8,7 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Created by stone on 2017/10/17.
+ * 异步HTTP请求模块
+ * 网络访问，端口扫描
  */
 public class HttpAsyncClient implements IHttpAsyncClient {
     private final ExecutorService service;

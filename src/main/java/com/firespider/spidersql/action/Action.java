@@ -41,6 +41,10 @@ public abstract class Action implements Runnable {
         }
     }
 
+    /***
+     * 添加动作结束符
+     * 用于判断是否到对尾
+     */
     void finished() {
         GenElement finalElement = new GenPrimitive<>(id + FINISH_FLAG);
         this.handler.completed(finalElement, true);

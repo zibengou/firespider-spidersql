@@ -48,6 +48,13 @@ public class ScanAction extends Action {
         client.close();
     }
 
+    /***
+     * 执行回调
+     * @param host
+     * @param port
+     * @param ip
+     * @param result
+     */
     private void enableHandle(String host, String port, String ip, boolean result) {
         try {
             GenObject gen = new GenObject();
@@ -61,7 +68,12 @@ public class ScanAction extends Action {
         }
     }
 
-    Set<String> parseHosts(String host) {
+    /***
+     * 解析HOST
+     * 解析url 解析IP
+     * 支持分段
+     */
+    private Set<String> parseHosts(String host) {
         Set<String> res = new LinkedHashSet<>();
         for (String h : host.split(",")) {
             if (Character.isDigit(h.getBytes()[0])) {
@@ -86,7 +98,7 @@ public class ScanAction extends Action {
         return res;
     }
 
-    Set<String> parsePorts(String port) {
+    private Set<String> parsePorts(String port) {
         Set<String> res = new HashSet<>();
         for (String p : port.split(",")) {
             res.addAll(split(p));
@@ -94,7 +106,7 @@ public class ScanAction extends Action {
         return res;
     }
 
-    Set<String> split(String str) {
+    private Set<String> split(String str) {
         String[] nums;
         Set<String> res = new HashSet<>();
         if (str.contains("-")) {
