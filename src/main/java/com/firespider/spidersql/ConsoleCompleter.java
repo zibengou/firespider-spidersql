@@ -1,5 +1,6 @@
 package com.firespider.spidersql;
 
+import com.firespider.spidersql.utils.Utils;
 import jline.console.completer.Completer;
 
 import java.util.List;
@@ -10,16 +11,20 @@ import java.util.List;
 public class ConsoleCompleter implements Completer {
     @Override
     public int complete(String s, int i, List<CharSequence> list) {
-        System.out.println(s + ":" + i);
+        if (Utils.isEmpty(s)) {
+            return -1;
+        }
         String out = s;
-        switch (s) {
-            case "print":
-                System.out.println("print outtttt");
-                out += "{}";
-                break;
-            case "get":
-                out += "{url:}";
-                break;
+        if (s.endsWith("print")) {
+            out += "{}";
+        } else if (s.endsWith("get")) {
+            out += "{url:}";
+        } else if (s.endsWith("save")) {
+            out += "{path:,data:}";
+        } else if (s.endsWith("scan")) {
+            out += "{host:,port:}";
+        } else {
+            return -1;
         }
         list.add(out);
         return 0;

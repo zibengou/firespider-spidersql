@@ -71,7 +71,7 @@ public class DefaultStorageManager implements IStorageManager {
         } else {
             filePath = path;
         }
-        return AsynchronousFileChannel.open(Utils.getPath(filePath), StandardOpenOption.WRITE);
+        return AsynchronousFileChannel.open(Utils.getPath(filePath), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
     }
 
     public void close() {

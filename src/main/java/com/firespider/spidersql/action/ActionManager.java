@@ -158,10 +158,12 @@ public class ActionManager {
     }
 
     private void acceptPrint(GenElement element) {
+        removeFinishFlag(element);
         System.out.println(element.toString());
     }
 
     private Action acceptSave(GenObject element, Integer id) {
+        removeFinishFlag(element.get("data"));
         Action action = new SaveAction(id, new SaveParam(element), new CompletionHandler<GenElement, Boolean>() {
             @Override
             public void completed(GenElement result, Boolean attachment) {
@@ -174,6 +176,25 @@ public class ActionManager {
             }
         });
         return action;
+    }
+
+    private void removeFinishFlag(GenElement element) {
+        if (element instanceof GenArray && element.getAsArray().size() > 0) {
+            int last = element.getAsArray().size() - 1;
+            GenElement ele = element.getAsArray().get(last);
+            if (ele instanceof GenPrimitive && ele.getAsPrimitive().getAsString().contains(Action.FINISH_FLAG)) {
+                try {
+                    Integer.valueOf(ele.getAsPrimitive().getAsString().replace(Action.FINISH_FLAG, ""));
+                    ((GenArray) element).remove(last);
+                } catch (Exception ignored) {
+
+                }
+
+            }
+
+        } else if (element instanceof GenVar && element.getAsVar().getElement().isArray()) {
+            removeFinishFlag(element.getAsVar().getElement().getAsArray());
+        }
     }
 
     /***

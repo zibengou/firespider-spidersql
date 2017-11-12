@@ -18,7 +18,7 @@ public class Utils {
     public static Path getPath(String fullPath) {
         Path path = Paths.get(fullPath);
         try {
-            if (Files.notExists(path.getParent())) {
+            if (path.getParent() != null && Files.notExists(path.getParent())) {
                 Files.createDirectories(path.getParent());
             }
             if (Files.notExists(path)) {
@@ -33,8 +33,8 @@ public class Utils {
     public static String join(Collection var0, String var1) {
         StringBuffer var2 = new StringBuffer();
 
-        for(Iterator var3 = var0.iterator(); var3.hasNext(); var2.append((String)var3.next())) {
-            if(var2.length() != 0) {
+        for (Iterator var3 = var0.iterator(); var3.hasNext(); var2.append((String) var3.next())) {
+            if (var2.length() != 0) {
                 var2.append(var1);
             }
         }

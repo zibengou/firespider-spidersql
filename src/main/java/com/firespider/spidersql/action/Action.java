@@ -42,7 +42,7 @@ public abstract class Action implements Runnable {
     }
 
     void finished() {
-        GenElement finalElement = new GenPrimitive<String>(id + FINISH_FLAG);
+        GenElement finalElement = new GenPrimitive<>(id + FINISH_FLAG);
         this.handler.completed(finalElement, true);
     }
 }
