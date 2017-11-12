@@ -27,8 +27,7 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
         this.params = new ConcurrentHashMap<>();
         this.actionManager = new ActionManager(threadNum);
     }
-
-    // TODO: 2017/9/27 处理多线程与区块功能
+    
     @Override
     public Gen visitExecuteSimple(SpiderSQLParser.ExecuteSimpleContext ctx) {
         Gen res = visitCombine_statement(ctx.combine_statement());

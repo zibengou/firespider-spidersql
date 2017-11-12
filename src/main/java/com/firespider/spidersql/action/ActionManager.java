@@ -132,7 +132,6 @@ public class ActionManager {
     private Action acceptGet(GenObject element, Integer id) throws IOException {
 
         GenArray value = new GenArray();
-        // TODO: 2017/9/27 确认是否会出现回调地狱
         Action action = new GetAction(id, new GetParam(element), new CompletionHandler<GenElement, Boolean>() {
             @Override
             public void completed(GenElement result, Boolean attachment) {
