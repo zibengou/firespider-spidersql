@@ -12,8 +12,6 @@ import java.util.Scanner;
 
 public class ConsoleMain {
     public static void main(String[] args) throws IOException {
-        // TODO: 2017/11/10 readme文档整理
-        // TODO: 2017/11/12 save支持无赋值动作
         if (args != null && args.length > 0) {
             handleFile(args[0]);
         } else {
@@ -30,15 +28,15 @@ public class ConsoleMain {
     }
 
     private static void handleInput() throws IOException {
-//        ConsoleReader reader = new ConsoleReader();
-//        ConsoleCompleter consoleCompleter = new ConsoleCompleter();
-//        reader.addCompleter(consoleCompleter);
+        ConsoleReader reader = new ConsoleReader();
+        ConsoleCompleter consoleCompleter = new ConsoleCompleter();
+        reader.addCompleter(consoleCompleter);
         //WINDOWS IDEA debug
-        Scanner reader = new Scanner(System.in);
+//        Scanner reader = new Scanner(System.in);
         while (true) {
-//            String in = reader.readLine("SpiderSQL> ");
-            System.out.print("SpiderSQL> ");
-            String in = reader.nextLine();
+            String in = reader.readLine("SpiderSQL> ");
+//            System.out.print("SpiderSQL> ");
+//            String in = reader.nextLine();
             if ("exit".equals(in)) {
                 break;
             } else {
@@ -48,7 +46,7 @@ public class ConsoleMain {
                 System.out.println("Total Time : " + time + " sec");
             }
         }
-//        reader.close();
+        reader.close();
     }
 
     private static void executeSql(String sql) {
