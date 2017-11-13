@@ -72,7 +72,7 @@ value
    | 'null'
    ;
 
-c_mul_var       :   C_VAR+ (',' C_VAR)+;
+c_mul_var       :   C_VAR (',' C_VAR)+;
 
 /** 基本词法 **/
 GET_STR         :   G E T;

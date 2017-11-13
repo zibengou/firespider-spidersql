@@ -18,21 +18,24 @@ public class HttpAsyncClient implements IHttpAsyncClient {
 
     private Charset charset;
 
-    public HttpAsyncClient(int threadNum) {
-        this(threadNum, null, Charset.defaultCharset());
+    private int timeout;
+
+    public HttpAsyncClient(int threadNum, int timeout) {
+        this(threadNum, null, Charset.defaultCharset(), timeout);
     }
 
-    public HttpAsyncClient(int threadNum, Map<String, String> header, Charset charset) {
+    public HttpAsyncClient(int threadNum, Map<String, String> header, Charset charset, int timeout) {
         this.service = Executors.newFixedThreadPool(threadNum);
         this.header = header;
         this.charset = charset;
+        this.timeout = timeout;
     }
 
     @Override
     public void handleGet(String url, CompletionHandler<Response, String> handler) {
         this.service.execute(() -> {
             try {
-                Response res = NetUtil.get(url, this.header, this.charset);
+                Response res = NetUtil.get(url, this.header, this.charset, this.timeout);
                 handler.completed(res, url);
             } catch (IOException e) {
                 handler.failed(e, url);
@@ -44,7 +47,7 @@ public class HttpAsyncClient implements IHttpAsyncClient {
     public void handleScanPort(String host, String port, CompletionHandler<Boolean, String> handler) {
         this.service.execute(() -> {
             try {
-                String ip = NetUtil.conn(host, Integer.parseInt(port));
+                String ip = NetUtil.conn(host, Integer.parseInt(port), this.timeout);
                 if (ip != null && ip.length() > 0) {
                     handler.completed(true, ip);
                 } else {

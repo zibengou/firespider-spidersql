@@ -9,21 +9,19 @@ import java.util.Map;
  * Created by stone on 2017/10/17.
  */
 public class NetUtil {
-    private static int timeout = 1000;
-
-    public static Response get(String path, Map<String, String> header, Charset charset) throws IOException {
-        HttpURLConnection conn = getConn(path, header);
+    public static Response get(String path, Map<String, String> header, Charset charset, int timeout) throws IOException {
+        HttpURLConnection conn = getConn(path, header, timeout);
         checkResponse(conn);
         return parseResponse(conn, charset);
 //        return readInputStream(conn.getInputStream());
     }
 
-    public static Response get(String path) throws IOException {
-        return get(path, null, Charset.defaultCharset());
+    public static Response get(String path, int timeout) throws IOException {
+        return get(path, null, Charset.defaultCharset(), timeout);
     }
 
-    public static Response post(String path, String data, Map<String, String> header, Charset charset) throws IOException {
-        HttpURLConnection conn = getConn(path, header);
+    public static Response post(String path, String data, Map<String, String> header, Charset charset, int timeout) throws IOException {
+        HttpURLConnection conn = getConn(path, header, timeout);
         conn.setRequestMethod("POST");
         OutputStream op = conn.getOutputStream();
         op.write(data.getBytes(charset));
@@ -31,11 +29,11 @@ public class NetUtil {
         return parseResponse(conn, charset);
     }
 
-    public static Response post(String path, String data) throws IOException {
-        return post(path, data, null, Charset.defaultCharset());
+    public static Response post(String path, String data, int timeout) throws IOException {
+        return post(path, data, null, Charset.defaultCharset(), timeout);
     }
 
-    public static String conn(String host, int port) throws IOException {
+    public static String conn(String host, int port, int timeout) throws IOException {
         Socket socket = new Socket();
         SocketAddress remoteAddr = new InetSocketAddress(host, port);
         socket.connect(remoteAddr, timeout);
@@ -44,7 +42,7 @@ public class NetUtil {
         return address;
     }
 
-    private static HttpURLConnection getConn(String path, Map<String, String> header) throws IOException {
+    private static HttpURLConnection getConn(String path, Map<String, String> header, int timeout) throws IOException {
         URL url = new URL(path);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setConnectTimeout(timeout);
@@ -56,7 +54,7 @@ public class NetUtil {
         return connection;
     }
 
-    private static HttpURLConnection getConn(String path, Map<String, String> header, Proxy proxy) throws IOException {
+    private static HttpURLConnection getConn(String path, Map<String, String> header, Proxy proxy, int timeout) throws IOException {
         URL url = new URL(path);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection(proxy);
         connection.setConnectTimeout(timeout);

@@ -31,6 +31,12 @@ public class GetParam extends Param {
                 this.header.put(key, value);
             });
         }
+        if (element.has("charset")) {
+            this.charset = element.get("charset").getAsString();
+        }
+        if (element.has("timeout")) {
+            this.setTimeout(element.get("timeout").getAsInteger());
+        }
     }
 
     public String getCharset() {

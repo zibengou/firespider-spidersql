@@ -20,7 +20,7 @@ public class ScanAction extends Action {
 
     public ScanAction(Integer id, ScanParam param, CompletionHandler<GenElement, Boolean> handler) throws IOException {
         super(id, param, handler);
-        this.client = new HttpAsyncClient(thread);
+        this.client = new HttpAsyncClient(thread, param.getTimeout());
     }
 
     public void handle() throws IOException, InterruptedException {

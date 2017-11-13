@@ -27,7 +27,7 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
         this.params = new ConcurrentHashMap<>();
         this.actionManager = new ActionManager(threadNum);
     }
-    
+
     @Override
     public Gen visitExecuteSimple(SpiderSQLParser.ExecuteSimpleContext ctx) {
         Gen res = visitCombine_statement(ctx.combine_statement());
@@ -79,6 +79,14 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
         Integer id = actionManager.accept(element, ActionManager.TYPE.VALUE);
         actionManager.bind(ctx.C_VAR().getText(), id);
         return new Gen(id);
+    }
+
+    @Override
+    public Gen visitAssignSave(SpiderSQLParser.AssignSaveContext ctx) {
+        String var = ctx.C_VAR().getText();
+        Gen res = visitSave(ctx.save());
+        actionManager.bind(var, res.getId());
+        return res;
     }
 
     @Override

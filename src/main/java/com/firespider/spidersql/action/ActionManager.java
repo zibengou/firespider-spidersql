@@ -142,7 +142,7 @@ public class ActionManager {
                         queueManager.publish(id, result);
                     }
                 } else {
-                    queueManager.publish(id, GenNull.INSTANCE);
+                    queueManager.publish(id, result);
                 }
             }
 
@@ -165,6 +165,7 @@ public class ActionManager {
         Action action = new ScanAction(id, new ScanParam(element), new CompletionHandler<GenElement, Boolean>() {
             @Override
             public void completed(GenElement result, Boolean attachment) {
+//                print(result);
                 if (attachment) {
                     queueManager.publish(id, result);
                 }
@@ -178,12 +179,18 @@ public class ActionManager {
         return action;
     }
 
+    private synchronized void print(GenElement element) {
+        System.out.print("\r");
+        System.out.print(element.toString());
+    }
+
     /***
      * 文本打印预执行方法
      * @param element
      */
     private void acceptPrint(GenElement element) {
         removeFinishFlag(element);
+        System.out.print("\r");
         System.out.println(element.toString());
     }
 
@@ -199,7 +206,9 @@ public class ActionManager {
         Action action = new SaveAction(id, new SaveParam(element), new CompletionHandler<GenElement, Boolean>() {
             @Override
             public void completed(GenElement result, Boolean attachment) {
-                queueManager.publish(id, new GenPrimitive<>(attachment));
+                if (!result.getAsPrimitive().getAsString().contains(Action.FINISH_FLAG)) {
+                    queueManager.publish(id, new GenPrimitive<>(attachment));
+                }
             }
 
             @Override
@@ -230,6 +239,12 @@ public class ActionManager {
 
         } else if (element instanceof GenVar && element.getAsVar().getElement().isArray()) {
             removeFinishFlag(element.getAsVar().getElement().getAsArray());
+        } else if (element instanceof GenPrimitive) {
+            if (element.getAsPrimitive().getAsString().contains(Action.FINISH_FLAG)) {
+                ((GenPrimitive) element).setValue("null");
+            }
+        } else if (element.isObject()) {
+            element.getAsObject().entrySet().forEach(entry -> removeFinishFlag(entry.getValue()));
         }
     }
 

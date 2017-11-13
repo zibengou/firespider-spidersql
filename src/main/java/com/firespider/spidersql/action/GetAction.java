@@ -26,7 +26,7 @@ public class GetAction extends Action {
 
     private static final int thread = 200;
 
-    private static final int HOLE_TIMEOUT = 60 * 60;
+    private static final int WHOLE_TIMEOUT = 60 * 60;
 
     private enum RESPONSE_TYPE {
         JSON, HTML, STRING;
@@ -35,7 +35,7 @@ public class GetAction extends Action {
 
     public GetAction(Integer id, GetParam param, CompletionHandler<GenElement, Boolean> handler) throws IOException {
         super(id, param, handler);
-        client = new HttpAsyncClient(thread);
+        client = new HttpAsyncClient(thread, param.getTimeout());
     }
 
     /***
@@ -198,7 +198,7 @@ public class GetAction extends Action {
                 }
             });
         });
-        latch.await(HOLE_TIMEOUT, TimeUnit.SECONDS);
+        latch.await(WHOLE_TIMEOUT, TimeUnit.SECONDS);
         client.close();
     }
 
