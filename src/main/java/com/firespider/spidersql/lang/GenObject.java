@@ -60,7 +60,9 @@ public class GenObject extends GenElement {
         for (Map.Entry<String, GenElement> map : members.entrySet()) {
             sb.append("\"").append(map.getKey()).append("\":").append(map.getValue().toString()).append(",");
         }
-        sb.deleteCharAt(sb.length() - 1);
+        if (sb.lastIndexOf(",") > 1) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
         sb.append("}");
         return sb.toString();
     }

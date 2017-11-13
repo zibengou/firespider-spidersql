@@ -31,7 +31,8 @@ public class SpiderSQLDefaultVisitor extends SpiderSQLBaseVisitor<Gen> {
     @Override
     public Gen visitExecuteSimple(SpiderSQLParser.ExecuteSimpleContext ctx) {
         Gen res = visitCombine_statement(ctx.combine_statement());
-        actionManager.close();
+        // ActionManager单例
+//        actionManager.close();
         return res;
     }
 

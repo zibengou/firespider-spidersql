@@ -13,6 +13,7 @@ combine_statement   :   simple_statement (PARALLEL simple_statement)* ;
 simple_statement    :   assign_statement
                     |   push_statement
                     |   print
+                    |   save
                     ;
 
 /** 队列动作 语法**/

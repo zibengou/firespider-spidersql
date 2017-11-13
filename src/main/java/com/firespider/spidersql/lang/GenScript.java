@@ -52,21 +52,33 @@ public class GenScript extends GenElement {
             String fe = first.getAsString();
             for (List<GenElement> elements : this.symbolList) {
                 String symbol = elements.get(0).getAsString();
-                fe = executeStringSymbol(symbol, fe, elements.get(1).getAsString());
+                try {
+                    fe = executeStringSymbol(symbol, fe, elements.get(1).getAsString());
+                } catch (Exception e) {
+                    System.err.println("execute string script:" + e.getMessage());
+                }
             }
             return new GenPrimitive<>(fe);
         } else if (first.isDobule()) {
             Double fe = first.getAsDouble();
             for (List<GenElement> elements : this.symbolList) {
                 String symbol = elements.get(0).getAsString();
-                fe = executeDoubleSymbol(symbol, fe, elements.get(1).getAsDouble());
+                try {
+                    fe = executeDoubleSymbol(symbol, fe, elements.get(1).getAsDouble());
+                } catch (Exception e) {
+                    System.err.println("execute double script:" + e.getMessage());
+                }
             }
             return new GenPrimitive<>(fe);
         } else if (first.isInt()) {
             Integer fe = first.getAsInteger();
             for (List<GenElement> elements : this.symbolList) {
                 String symbol = elements.get(0).getAsString();
-                fe = executeIntSymbol(symbol, fe, elements.get(1).getAsInteger());
+                try {
+                    fe = executeIntSymbol(symbol, fe, elements.get(1).getAsInteger());
+                } catch (Exception e) {
+                    System.err.println("execute int script:" + e.getMessage());
+                }
             }
             return new GenPrimitive<>(fe);
         }
