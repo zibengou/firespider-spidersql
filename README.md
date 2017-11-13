@@ -260,7 +260,7 @@ fragment ID     :   [a-zA-Z]+ [a-zA-Z0-9]*;
 
 #### 1.3 动作
 
-动作的操作对象为变量的属性，动作的操作结果为属性，动作分为scan,get,save,desc,print五大类，
+动作的操作对象为变量或属性，动作的操作结果为属性，动作分为scan,get,save,desc,print五大类，
 
 动作的语法解析如下：
 
